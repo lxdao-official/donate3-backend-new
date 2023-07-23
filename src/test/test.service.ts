@@ -7,7 +7,7 @@ export class TestService {
   private readonly logger = new Logger(TestService.name);
 
   create(createTestDto: CreateTestDto) {
-    this.logger.error('create axios logger');
+    console.log(createTestDto);
     return 'This action adds a new test';
   }
 
@@ -20,6 +20,7 @@ export class TestService {
   }
 
   update(id: number, updateTestDto: UpdateTestDto) {
+    this.logger.log(updateTestDto);
     return `This action updates a #${id} test`;
   }
 
