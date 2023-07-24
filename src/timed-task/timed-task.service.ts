@@ -69,6 +69,7 @@ export class TimedTaskService {
           money: ethers.formatEther(transactionInfo.value) + ' eth',
           transactionHash: info.transactionHash,
           timestamp: new Date(timestamp * 1000),
+          chainId: transactionInfo.chainId as unknown as number,
         };
         return newData;
       });

@@ -25,4 +25,7 @@ export class DonateHistory {
 
   @Column()
   timestamp: Date;
+
+  @Column()
+  chainId: number;
 }

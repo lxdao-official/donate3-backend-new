@@ -4,11 +4,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TestModule } from './test/test.module';
+import { TestModule } from './api/test/test.module';
 import LoggerMiddleware from './logger/logger.middleware';
 
 import { DonateHistory } from './database/donateHistory.entity';
 import { TimedTaskModule } from './timed-task/timed-task.module';
+import { DonatesModule } from './api/donates/donates.module';
 
 @Module({
   imports: [
@@ -21,10 +22,12 @@ import { TimedTaskModule } from './timed-task/timed-task.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [DonateHistory],
+      synchronize: true,
     }),
     TestModule,
     ScheduleModule.forRoot(),
     TimedTaskModule,
+    DonatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

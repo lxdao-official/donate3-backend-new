@@ -29,6 +29,8 @@
     "@nestjs/schedule": "^3.0.1",
     "@nestjs/swagger": "^7.1.1",
     "@nestjs/typeorm": "^10.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
     "ethers": "^6.6.4",
     "pg": "^8.11.1",
     "reflect-metadata": "^0.1.13",
