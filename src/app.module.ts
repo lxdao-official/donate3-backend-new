@@ -26,7 +26,7 @@ import { DonatesModule } from './api/donates/donates.module';
     }),
     TestModule,
     ScheduleModule.forRoot(),
-    // TimedTaskModule,
+    TimedTaskModule,
     DonatesModule,
   ],
   controllers: [AppController],
