@@ -13,6 +13,7 @@ import { CreateDonateDto } from './dto/create-donate.dto';
 import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { DonationRankingDto } from './dto/donation-ranking.dto';
 
 @Controller('donates')
 export class DonatesController {
@@ -38,6 +39,20 @@ export class DonatesController {
     return this.donatesService.findDonatesFromAddress(queryInfo);
   }
 
+   @Get('ranking')
+  @ApiOperation({
+    summary: '获取捐赠排行榜',
+    description: '查询某个地址接收到的捐赠排行榜',
+  })
+  @ApiQuery({
+    name: 'address',
+    type: 'string',
+    description: '接收捐赠的地址',
+    required: true,
+  })
+  getDonationRanking(@Query() queryInfo: DonationRankingDto) {
+    return this.donatesService.getDonationRanking(queryInfo.address);
+  }
   // @Get(':id')
   // findOne(@Param('id') id: string) {
   //   return this.donatesService.findOne(+id);

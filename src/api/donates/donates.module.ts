@@ -3,7 +3,7 @@ import { DonatesService } from './donates.service';
 import { DonatesController } from './donates.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DonateHistory } from 'src/database/donateHistory.entity';
-
+import { DonationRankingDto } from './dto/donation-ranking.dto';
 @Module({
   imports: [TypeOrmModule.forFeature([DonateHistory])],
   controllers: [DonatesController],
