@@ -38,12 +38,12 @@ export class DonatesService {
     return `This action removes a #${id} donate`;
   }
 
-    async getDonationRanking(address: string) {
+  async getDonationRanking(address: string) {
     const result = await this.donateHistory.find({
       where: { to: address },
       order: {
         amount: 'ASC' as unknown as FindOperator<any>,
-      } as FindManyOptions<DonateHistory>['order'], 
+      } as FindManyOptions<DonateHistory>['order'],
     });
     return result;
   }
