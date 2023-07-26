@@ -39,7 +39,7 @@ export class DonatesController {
     return this.donatesService.findDonatesFromAddress(queryInfo);
   }
 
-   @Get('ranking')
+  @Get('ranking')
   @ApiOperation({
     summary: '获取捐赠排行榜',
     description: '查询某个地址接收到的捐赠排行榜',
