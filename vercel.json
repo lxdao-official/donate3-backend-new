@@ -1,12 +1,12 @@
 {
   "version": 2,
   "env": {
-    "DB_HOST": "@DB_HOST",
-    "DB_PORT": "@DB_PORT",
-    "DB_USERNAME": "@DB_USERNAME",
-    "DB_PASSWORD": "@DB_PASSWORD",
-    "DB_DATABASE": "@DB_DATABASE",
-    "NODE_ENV": "@NODE_ENV"
+    "DB_HOST": "ep-nameless-morning-18415079-pooler.us-east-1.postgres.vercel-storage.com",
+    "DB_PORT": "5432",
+    "DB_USERNAME": "default",
+    "DB_PASSWORD": "SFjGPgJu0O7A",
+    "DB_DATABASE": "DB_DATABASE",
+    "NODE_ENV": "verceldb"
   },
   "builds": [{ "src": "src/main.ts", "use": "@vercel/node" }],
   "routes": [
