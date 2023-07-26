@@ -5,7 +5,8 @@
     "DB_PORT": "@DB_PORT",
     "DB_USERNAME": "@DB_USERNAME",
     "DB_PASSWORD": "@DB_PASSWORD",
-    "DB_DATABASE": "@DB_DATABASE"
+    "DB_DATABASE": "@DB_DATABASE",
+    "NODE_ENV": "@NODE_ENV"
   },
   "builds": [{ "src": "src/main.ts", "use": "@vercel/node" }],
   "routes": [
