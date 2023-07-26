@@ -1,10 +1,17 @@
 {
   "version": 2,
-  "builds": [{ "src": "main.ts", "use": "@vercel/node" }],
+  "env": {
+    "DB_HOST": "@DB_HOST",
+    "DB_PORT": "@DB_PORT",
+    "DB_USERNAME": "@DB_USERNAME",
+    "DB_PASSWORD": "@DB_PASSWORD",
+    "DB_DATABASE": "@DB_DATABASE"
+  },
+  "builds": [{ "src": "src/main.ts", "use": "@vercel/node" }],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "main.ts",
+      "dest": "src/main.ts",
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
     }
   ]
