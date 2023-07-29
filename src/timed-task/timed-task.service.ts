@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { ethers, Contract } from 'ethers';
+import { ethers, Contract, EventLog } from 'ethers';
 import { DonateHistory } from 'src/database/donateHistory.entity';
 import { Repository } from 'typeorm';
 import config from 'src/config';
@@ -50,29 +50,30 @@ export class TimedTaskService {
       return [];
     }
 
-    const promiseData = transactions
-      .map((item) => ({
-        transactionHash: item.transactionHash,
+    const promiseData = transactions.map(async (item: EventLog) => {
+      const timestamp = (await this.provider.getBlock(item.blockNumber))
+        .timestamp;
+      const transactionInfo = await this.provider.getTransaction(
+        item.transactionHash,
+      );
+
+      const [from, to, symbol, amount, msg] = item.args;
+
+      const newData: Partial<DonateHistory> = {
+        from,
+        to,
+        blockHash: item.blockHash,
         blockNumber: item.blockNumber,
-      }))
-      .map(async (info) => {
-        const timestamp = (await this.provider.getBlock(info.blockNumber))
-          .timestamp;
-        const transactionInfo = await this.provider.getTransaction(
-          info.transactionHash,
-        );
-        const newData: Partial<DonateHistory> = {
-          from: transactionInfo.from,
-          to: transactionInfo.to,
-          blockHash: transactionInfo.blockHash,
-          blockNumber: transactionInfo.blockNumber,
-          money: ethers.formatEther(transactionInfo.value) + ' eth',
-          transactionHash: info.transactionHash,
-          timestamp: new Date(timestamp * 1000),
-          chainId: transactionInfo.chainId as unknown as number,
-        };
-        return newData;
-      });
+        money: amount,
+        transactionHash: item.transactionHash,
+        timestamp: new Date(timestamp * 1000),
+        chainId: transactionInfo.chainId as unknown as number,
+        message: ethers.toUtf8String(msg),
+        erc20: ethers.decodeBytes32String(symbol),
+      };
+
+      return newData;
+    });
     const result = await Promise.all(promiseData);
     return result;
   }
@@ -93,7 +94,7 @@ export class TimedTaskService {
       );
 
       if (data.length > 0) {
-        this.donateHistory.save(data);
+        await this.donateHistory.save(data);
 
         this.logger.log(
           `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${

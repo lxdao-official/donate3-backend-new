@@ -28,4 +28,10 @@ export class DonateHistory {
 
   @Column()
   chainId: number;
+
+  @Column()
+  message: string;
+
+  @Column()
+  erc20: string;
 }
