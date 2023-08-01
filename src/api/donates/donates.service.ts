@@ -42,7 +42,7 @@ export class DonatesService {
     const result = await this.donateHistory.find({
       where: { to: address },
       order: {
-        amount: 'ASC' as unknown as FindOperator<any>,
+        money: 'DESC' as unknown as FindOperator<any>,
       } as FindManyOptions<DonateHistory>['order'],
     });
     return result;
