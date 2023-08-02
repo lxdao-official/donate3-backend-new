@@ -35,8 +35,9 @@ export class DonatesController {
     description: '被捐赠人的地址',
     required: true,
   })
-  findDonatesFromAddress(@Query() queryInfo: QueryDonateDto) {
-    return this.donatesService.findDonatesFromAddress(queryInfo);
+  async findDonatesFromAddress(@Query() queryInfo: QueryDonateDto) {
+    const data = await this.donatesService.findDonatesFromAddress(queryInfo);
+    return { data, code: 200, message: '请求成功' };
   }
 
   @Get('ranking')
@@ -50,8 +51,8 @@ export class DonatesController {
     description: '接收捐赠的地址',
     required: true,
   })
-  getDonationRanking(@Query() queryInfo: DonationRankingDto) {
-    return this.donatesService.getDonationRanking(queryInfo.address);
+  async getDonationRanking(@Query() queryInfo: DonationRankingDto) {
+    return await this.donatesService.getDonationRanking(queryInfo.address);
   }
   // @Get(':id')
   // findOne(@Param('id') id: string) {

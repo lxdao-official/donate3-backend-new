@@ -8,7 +8,7 @@ const CONTRACT_MAP = {
 
 const RPC_MAP = {
   5: 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-  80001: '',
-  137: '',
+  80001: 'https://rpc.ankr.com/polygon_mumbai',
+  137: 'https://polygon.llamarpc.com',
 };
 export default { CONTRACT_MAP, abi, RPC_MAP };
