@@ -20,7 +20,7 @@ export class DonateHistory {
   @Column()
   transactionHash: string;
 
-  @Column()
+  @Column({ type: 'character varying', length: 100 })
   money: string;
 
   @Column()
@@ -29,9 +29,9 @@ export class DonateHistory {
   @Column()
   chainId: number;
 
-  @Column()
+  @Column({ nullable: true })
   message: string;
 
-  @Column()
+  @Column({ nullable: true })
   erc20: string;
 }

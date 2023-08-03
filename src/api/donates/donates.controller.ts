@@ -51,8 +51,15 @@ export class DonatesController {
     description: '接收捐赠的地址',
     required: true,
   })
+  @ApiQuery({
+    name: 'chainId',
+    type: 'number',
+    description: '链ID',
+    required: true,
+  })
   async getDonationRanking(@Query() queryInfo: DonationRankingDto) {
-    return await this.donatesService.getDonationRanking(queryInfo.address);
+    const { address, chainId } = queryInfo;
+    return await this.donatesService.getDonationRanking(address, chainId);
   }
   // @Get(':id')
   // findOne(@Param('id') id: string) {
