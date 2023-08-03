@@ -11,8 +11,9 @@ import config from 'src/config';
 @Injectable()
 export class TimedTaskService {
   private readonly logger = new Logger(TimedTaskService.name);
-  private readonly provider: ethers.JsonRpcProvider;
-  private readonly contract: Contract;
+  private providerContracts: {
+    [chainId: number]: { provider: ethers.JsonRpcProvider; contract: Contract };
+  };
 
   constructor(
     private configService: ConfigService,
@@ -20,40 +21,45 @@ export class TimedTaskService {
     private donateHistory: Repository<DonateHistory>,
   ) {
     const { CONTRACT_MAP, abi, RPC_MAP } = config;
-    this.provider = new ethers.JsonRpcProvider(RPC_MAP[5]);
-    this.contract = new ethers.Contract(CONTRACT_MAP[5], abi, this.provider);
+    this.providerContracts = {};
+    Object.keys(RPC_MAP).forEach((chainId) => {
+      const parsedChainId = parseInt(chainId, 10);
+      if (CONTRACT_MAP[parsedChainId]) {
+        const provider = new ethers.JsonRpcProvider(RPC_MAP[parsedChainId]);
+        const contract = new ethers.Contract(
+          CONTRACT_MAP[parsedChainId],
+          abi,
+          provider,
+        );
+        this.providerContracts[parsedChainId] = { provider, contract };
+      }
+    });
   }
 
-  async getLatestData() {
+  async getLatestData(chainId: number) {
     const result = await this.donateHistory.find({
+      where: { chainId },
       order: { blockNumber: 'DESC' },
       take: 1,
     });
     return result[0];
   }
 
-  async getLatestBlockNumber() {
-    return await this.provider.getBlockNumber();
-  }
-
   async getBlockDonateHistory(
+    chainId: number,
     from: number,
     to: number,
   ): Promise<Partial<DonateHistory>[]> {
-    const transactions = await this.contract.queryFilter(
-      'donateRecord',
-      from,
-      to,
-    );
+    const { provider, contract } = this.providerContracts[chainId];
+    const transactions = await contract.queryFilter('donateRecord', from, to);
 
     if (transactions.length === 0) {
       return [];
     }
 
     const promiseData = transactions.map(async (item: EventLog) => {
-      const timestamp = (await this.provider.getBlock(item.blockNumber))
-        .timestamp;
-      const transactionInfo = await this.provider.getTransaction(
+      const timestamp = (await provider.getBlock(item.blockNumber)).timestamp;
+      const transactionInfo = await provider.getTransaction(
         item.transactionHash,
       );
 
@@ -78,32 +84,37 @@ export class TimedTaskService {
     return result;
   }
 
+  async handleChain(chainId: number) {
+    const lastData = await this.getLatestData(chainId);
+    const { provider, contract } = this.providerContracts[chainId];
+    const blockNumber = await provider.getBlockNumber();
+    const fromBlockNumber = lastData ? lastData.blockNumber + 1 : 0;
+    const toBlockNumber = blockNumber - 1;
+
+    const data = await this.getBlockDonateHistory(
+      chainId,
+      fromBlockNumber,
+      toBlockNumber,
+    );
+
+    if (data.length > 0) {
+      await this.donateHistory.save(data);
+
+      this.logger.log(
+        `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
+          data.length
+        }`,
+      );
+    } else {
+      this.logger.log(`${new Date().toString()}: No data to update`);
+    }
+  }
   @Cron('0 */5 * * * *')
   async handleCron() {
     try {
-      const lastData = await this.getLatestData();
-
-      const blockNumber = await this.getLatestBlockNumber();
-
-      const fromBlockNumber = lastData ? lastData.blockNumber + 1 : 0;
-      const toBlockNumber = blockNumber - 1;
-
-      const data = await this.getBlockDonateHistory(
-        fromBlockNumber,
-        toBlockNumber,
-      );
-
-      if (data.length > 0) {
-        await this.donateHistory.save(data);
-
-        this.logger.log(
-          `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
-            data.length
-          }`,
-        );
-      } else {
-        this.logger.log(`${new Date().toString()}: No data to update`);
-      }
+      Object.keys(this.providerContracts).forEach((chainId) => {
+        this.handleChain(parseInt(chainId, 10));
+      });
     } catch (e) {
       this.logger.error('update new donate history failed: ', e.message);
     }

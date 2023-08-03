@@ -38,13 +38,23 @@ export class DonatesService {
     return `This action removes a #${id} donate`;
   }
 
-  async getDonationRanking(address: string) {
-    const result = await this.donateHistory.find({
-      where: { to: address },
-      order: {
-        money: 'DESC' as unknown as FindOperator<any>,
-      } as FindManyOptions<DonateHistory>['order'],
-    });
-    return result;
+  async getDonationRanking(address: string, chainId: number) {
+    const queryBuilder = this.donateHistory.createQueryBuilder('donate');
+
+    const result = await queryBuilder
+      .select('donate.from', 'address')
+      .addSelect('SUM(CAST(donate.money AS numeric))', 'totaldonation')
+      .where('donate.to = :address', { address })
+      .andWhere('donate.chainId = :chainId', { chainId })
+      .andWhere('donate.money IS NOT NULL')
+      .groupBy('donate.from')
+      .orderBy('totaldonation', 'DESC')
+      .getRawMany();
+    const resultsWithRank = result.map((entry, index) => ({
+      ...entry,
+      top: (index + 1).toString(),
+    }));
+
+    return resultsWithRank;
   }
 }
