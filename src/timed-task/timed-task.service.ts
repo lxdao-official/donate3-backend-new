@@ -58,7 +58,7 @@ export class TimedTaskService {
     }
 
     const promiseData = transactions.map(async (item: EventLog) => {
-      const timestamp = (await provider.getBlock(item.blockNumber)).timestamp;
+      const block = await provider.getBlock(item.blockNumber);
       const transactionInfo = await provider.getTransaction(
         item.transactionHash,
       );
@@ -72,7 +72,7 @@ export class TimedTaskService {
         blockNumber: item.blockNumber,
         money: amount,
         transactionHash: item.transactionHash,
-        timestamp: new Date(timestamp * 1000),
+        timestamp: block.timestamp * 1000,
         chainId: transactionInfo.chainId as unknown as number,
         message: ethers.toUtf8String(msg),
         erc20: ethers.decodeBytes32String(symbol),
