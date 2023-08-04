@@ -72,7 +72,7 @@ export class TimedTaskService {
         blockNumber: item.blockNumber,
         money: amount,
         transactionHash: item.transactionHash,
-        timestamp: Math.floor(block.timestamp),
+        timestamp: block.timestamp * 1000,
         chainId: transactionInfo.chainId as unknown as number,
         message: ethers.toUtf8String(msg),
         erc20: ethers.decodeBytes32String(symbol),

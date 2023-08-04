@@ -23,7 +23,7 @@ export class DonateHistory {
   @Column({ type: 'character varying', length: 100 })
   money: string;
 
-  @Column()
+  @Column({ type: 'bigint' })
   timestamp: number;
 
   @Column()
