@@ -77,10 +77,22 @@ export class DonatesService {
   }
 
   async getTokenPrice() {
-    const response = await axios.get(
-      'https://fapi.binance.com/fapi/v1/ticker/price',
-    );
-    return response.data || [];
+    try {
+      const result = await axios.get(
+        'https://www.okx.com/api/v5/public/mark-price?instType=MARGIN',
+      );
+      if (result.status === 200) {
+        return result.data.data;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      this.logger.error(
+        `${new Date().toDateString()} ${DonatesService.name}: ${
+          e.response.status
+        } errorCode: ${e.response.data.code}  msg: ${e.response.data.msg}`,
+      );
+    }
   }
 
   getChainDonateToken(chainIdMap: Map<number, DonateHistory[]>) {
@@ -105,8 +117,8 @@ export class DonatesService {
   getTokenAmount(amountMap, priceList) {
     const resultTotalMoney = [];
     amountMap.forEach((amount, key) => {
-      const info = priceList.find((p) => p.symbol === `${key}USDT`);
-      const price = info?.price || 0;
+      const info = priceList.find((p) => p.instId === `${key}-USDT`);
+      const price = info?.markPx || 0;
       let totalMoney = 0;
       if (price) {
         totalMoney = multiply(amount, +price);
