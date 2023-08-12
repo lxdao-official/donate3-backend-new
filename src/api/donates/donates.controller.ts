@@ -14,6 +14,7 @@ import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { DonationRankingDto } from './dto/donation-ranking.dto';
+import { QueryDonationAmount } from './dto/query-donation-amount.dto';
 
 @Controller('donates')
 export class DonatesController {
@@ -61,10 +62,23 @@ export class DonatesController {
     const { address, chainId } = queryInfo;
     return await this.donatesService.getDonationRanking(address, chainId);
   }
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.donatesService.findOne(+id);
-  // }
+
+  @Get('donation-amount')
+  @ApiOperation({
+    summary: '获取捐赠的所有金额',
+    description: '查询某个地址接收到的捐赠金额',
+  })
+  @ApiQuery({
+    name: 'address',
+    type: 'string',
+    description: '接收捐赠的地址',
+    required: true,
+  })
+  async getAllDonationAmount(@Query() queryInfo: QueryDonationAmount) {
+    const { address } = queryInfo;
+    const result = await this.donatesService.getAllDonationAmount(address);
+    return result;
+  }
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateDonateDto: UpdateDonateDto) {

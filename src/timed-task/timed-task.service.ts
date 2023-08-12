@@ -74,7 +74,10 @@ export class TimedTaskService {
         transactionHash: item.transactionHash,
         timestamp: block.timestamp * 1000,
         chainId: transactionInfo.chainId as unknown as number,
-        message: ethers.toUtf8String(msg),
+        message:
+          (msg.startsWith('0x') ? msg : '0x' + msg) === '0x00'
+            ? ''
+            : ethers.toUtf8String(msg),
         erc20: ethers.decodeBytes32String(symbol),
       };
 

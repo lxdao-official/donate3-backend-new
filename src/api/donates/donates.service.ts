@@ -6,6 +6,9 @@ import { QueryDonateDto } from './dto/query-donate.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOperator } from 'typeorm';
+import { ethers } from 'ethers';
+import { add, multiply } from 'lodash';
+import axios from 'axios';
 @Injectable()
 export class DonatesService {
   private readonly logger = new Logger(DonatesService.name);
@@ -56,5 +59,85 @@ export class DonatesService {
     }));
 
     return resultsWithRank;
+  }
+
+  formateDataFromChainId(data: DonateHistory[]) {
+    const chainIdMap = new Map<number, DonateHistory[]>();
+    data.forEach((info) => {
+      const chainId = info.chainId;
+      if (chainIdMap.get(chainId)) {
+        const arr = chainIdMap.get(chainId);
+        arr.push(info);
+        chainIdMap.set(chainId, arr);
+      } else {
+        chainIdMap.set(chainId, [info]);
+      }
+    });
+    return chainIdMap;
+  }
+
+  async getTokenPrice() {
+    try {
+      const result = await axios.get(
+        'https://www.okx.com/api/v5/public/mark-price?instType=MARGIN',
+      );
+      if (result.status === 200) {
+        return result.data.data;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      this.logger.error(
+        `${new Date().toDateString()} ${DonatesService.name}: ${
+          e.response.status
+        } errorCode: ${e.response.data.code}  msg: ${e.response.data.msg}`,
+      );
+    }
+  }
+
+  getChainDonateToken(chainIdMap: Map<number, DonateHistory[]>) {
+    const chainAmountMap = new Map<number, Map<string, number>>();
+    chainIdMap.forEach((chainArr, chainId) => {
+      const amountMap = new Map<string, number>();
+      chainArr.forEach((info) => {
+        const erc20 = info.erc20;
+        const money = +ethers.formatEther(info.money);
+        if (amountMap.get(erc20)) {
+          const amount = amountMap.get(erc20);
+          amountMap.set(erc20, add(amount, money));
+        } else {
+          amountMap.set(erc20, money);
+        }
+      });
+      chainAmountMap.set(chainId, amountMap);
+    });
+    return chainAmountMap;
+  }
+
+  getTokenAmount(amountMap, priceList) {
+    const resultTotalMoney = [];
+    amountMap.forEach((amount, key) => {
+      const info = priceList.find((p) => p.instId === `${key}-USDT`);
+      const price = info?.markPx || 0;
+      let totalMoney = 0;
+      if (price) {
+        totalMoney = multiply(amount, +price);
+      }
+      resultTotalMoney.push({ token: key, totalMoney, price, num: amount });
+    });
+    return resultTotalMoney;
+  }
+
+  async getAllDonationAmount(address: string) {
+    const allHistory = await this.findDonatesFromAddress({ address });
+    const chainIdMap = this.formateDataFromChainId(allHistory);
+    const priceList = await this.getTokenPrice();
+    const chainAmountMap = this.getChainDonateToken(chainIdMap);
+    const resultTotalMoney = {};
+    chainAmountMap.forEach((amountMap, chainId) => {
+      const amountArr = this.getTokenAmount(amountMap, priceList);
+      resultTotalMoney[chainId] = amountArr;
+    });
+    return resultTotalMoney;
   }
 }
