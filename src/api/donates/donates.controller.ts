@@ -80,6 +80,21 @@ export class DonatesController {
     return result;
   }
 
+  @Get('donationsCount')
+  @ApiOperation({
+    summary: '查询捐赠人数',
+    description: '查询某个地址所有的捐赠信息的人数',
+  })
+  @ApiQuery({
+    name: 'address',
+    type: 'string',
+    description: '被捐赠人的地址',
+    required: true,
+  })
+  async getTotalDonationCount(@Query() queryInfo: QueryDonateDto) {
+    const data = await this.donatesService.getTotalDonationAddress(queryInfo);
+    return { data, code: 200, message: '请求成功' };
+  }
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateDonateDto: UpdateDonateDto) {
   //   return this.donatesService.update(+id, updateDonateDto);

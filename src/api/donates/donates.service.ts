@@ -28,6 +28,16 @@ export class DonatesService {
     });
     return result;
   }
+  //查询捐赠人数
+  async getTotalDonationAddress(params: QueryDonateDto) {
+    const query = `
+    SELECT COUNT(*) as total
+    FROM donate_history
+    WHERE "to" = $1
+  `;
+    const result = await this.donateHistory.query(query, [params.address]);
+    return result[0].total;
+  }
 
   findOne(id: number) {
     return `This action returns a #${id} donate`;
