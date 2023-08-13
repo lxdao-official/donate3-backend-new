@@ -9,6 +9,19 @@ import { FindManyOptions, FindOperator } from 'typeorm';
 import { ethers } from 'ethers';
 import { add, multiply } from 'lodash';
 import axios from 'axios';
+
+interface OkxResponse {
+  instId: string;
+  instType: string;
+  markPx: string;
+  ts: string;
+}
+
+export interface DonateInfoWithAmount extends DonateHistory {
+  amount: number;
+  price: string;
+}
+
 @Injectable()
 export class DonatesService {
   private readonly logger = new Logger(DonatesService.name);
@@ -61,8 +74,8 @@ export class DonatesService {
     return resultsWithRank;
   }
 
-  formateDataFromChainId(data: DonateHistory[]) {
-    const chainIdMap = new Map<number, DonateHistory[]>();
+  formateDataFromChainId(data: DonateInfoWithAmount[]) {
+    const chainIdMap = new Map<number, DonateInfoWithAmount[]>();
     data.forEach((info) => {
       const chainId = info.chainId;
       if (chainIdMap.get(chainId)) {
@@ -76,7 +89,7 @@ export class DonatesService {
     return chainIdMap;
   }
 
-  async getTokenPrice() {
+  async getTokenPrice(): Promise<OkxResponse[]> {
     try {
       const result = await axios.get(
         'https://www.okx.com/api/v5/public/mark-price?instType=MARGIN',
@@ -95,49 +108,63 @@ export class DonatesService {
     }
   }
 
-  getChainDonateToken(chainIdMap: Map<number, DonateHistory[]>) {
-    const chainAmountMap = new Map<number, Map<string, number>>();
-    chainIdMap.forEach((chainArr, chainId) => {
-      const amountMap = new Map<string, number>();
-      chainArr.forEach((info) => {
-        const erc20 = info.erc20;
-        const money = +ethers.formatEther(info.money);
-        if (amountMap.get(erc20)) {
-          const amount = amountMap.get(erc20);
-          amountMap.set(erc20, add(amount, money));
-        } else {
-          amountMap.set(erc20, money);
-        }
-      });
-      chainAmountMap.set(chainId, amountMap);
+  getDonateHistoryWithAmount(
+    donateList: DonateHistory[],
+    tokenPrice: OkxResponse[],
+  ): DonateInfoWithAmount[] {
+    const donateWithTokenValue = donateList.map((donate) => {
+      const info = tokenPrice.find((p) => p.instId === `${donate.erc20}-USDT`);
+      let amount = 0;
+      if (info) {
+        amount = multiply(+info.markPx, +ethers.formatEther(donate.money));
+      }
+      return {
+        ...donate,
+        amount,
+        price: info?.markPx || '0',
+      };
     });
-    return chainAmountMap;
+    return donateWithTokenValue;
   }
 
-  getTokenAmount(amountMap, priceList) {
-    const resultTotalMoney = [];
-    amountMap.forEach((amount, key) => {
-      const info = priceList.find((p) => p.instId === `${key}-USDT`);
-      const price = info?.markPx || 0;
-      let totalMoney = 0;
-      if (price) {
-        totalMoney = multiply(amount, +price);
-      }
-      resultTotalMoney.push({ token: key, totalMoney, price, num: amount });
+  getResultTotalMoney(chainIdMap) {
+    const resultTotalMoney = {};
+    chainIdMap.forEach((donateList, chainId) => {
+      const ChainIdAmount = { token: '', totalMoney: 0, price: 0, num: 0 };
+      donateList.forEach((donate) => {
+        ChainIdAmount.token = donate.erc20;
+        ChainIdAmount.totalMoney += donate.amount;
+        ChainIdAmount.price = +donate.price;
+        ChainIdAmount.num += +ethers.formatEther(donate.money);
+      });
+      resultTotalMoney[chainId] = ChainIdAmount;
     });
     return resultTotalMoney;
   }
 
   async getAllDonationAmount(address: string) {
     const allHistory = await this.findDonatesFromAddress({ address });
-    const chainIdMap = this.formateDataFromChainId(allHistory);
     const priceList = await this.getTokenPrice();
-    const chainAmountMap = this.getChainDonateToken(chainIdMap);
-    const resultTotalMoney = {};
-    chainAmountMap.forEach((amountMap, chainId) => {
-      const amountArr = this.getTokenAmount(amountMap, priceList);
-      resultTotalMoney[chainId] = amountArr;
-    });
+    const allHistoryWithAmount = this.getDonateHistoryWithAmount(
+      allHistory,
+      priceList,
+    );
+
+    const chainIdMap = this.formateDataFromChainId(allHistoryWithAmount);
+    const resultTotalMoney = this.getResultTotalMoney(chainIdMap);
+
     return resultTotalMoney;
+  }
+
+  async getAllDonatorHistory(address: string) {
+    const priceList = await this.getTokenPrice();
+    const donatorHistory = await this.donateHistory.find({
+      where: { from: address },
+    });
+    const donatorAmountMap = this.getDonateHistoryWithAmount(
+      donatorHistory,
+      priceList,
+    );
+    return donatorAmountMap;
   }
 }

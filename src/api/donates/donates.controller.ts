@@ -80,6 +80,23 @@ export class DonatesController {
     return result;
   }
 
+  @Get('donator-history')
+  @ApiOperation({
+    summary: '获取捐赠者的捐赠历史',
+    description: '查询某个地址捐赠历史',
+  })
+  @ApiQuery({
+    name: 'address',
+    type: 'string',
+    description: '捐赠者的地址',
+    required: true,
+  })
+  async getAllDonatorHistory(@Query() queryInfo: QueryDonationAmount) {
+    const { address } = queryInfo;
+    const result = await this.donatesService.getAllDonatorHistory(address);
+    return result;
+  }
+
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateDonateDto: UpdateDonateDto) {
   //   return this.donatesService.update(+id, updateDonateDto);
