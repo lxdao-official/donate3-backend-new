@@ -7,6 +7,7 @@ import { ethers, Contract, EventLog } from 'ethers';
 import { DonateHistory } from 'src/database/donateHistory.entity';
 import { Repository } from 'typeorm';
 import config from 'src/config';
+import { toLower } from 'lodash';
 
 @Injectable()
 export class TimedTaskService {
@@ -20,7 +21,7 @@ export class TimedTaskService {
     @InjectRepository(DonateHistory)
     private donateHistory: Repository<DonateHistory>,
   ) {
-    const { CONTRACT_MAP, abi, RPC_MAP } = config;
+    const { CONTRACT_MAP, abi, abiUid, RPC_MAP, useUidChainId } = config;
     this.providerContracts = {};
     Object.keys(RPC_MAP).forEach((chainId) => {
       const parsedChainId = parseInt(chainId, 10);
@@ -28,7 +29,7 @@ export class TimedTaskService {
         const provider = new ethers.JsonRpcProvider(RPC_MAP[parsedChainId]);
         const contract = new ethers.Contract(
           CONTRACT_MAP[parsedChainId],
-          abi,
+          useUidChainId.includes(parsedChainId) ? abiUid : abi,
           provider,
         );
         this.providerContracts[parsedChainId] = { provider, contract };
@@ -65,6 +66,21 @@ export class TimedTaskService {
 
       const [from, to, symbol, amount, msg] = item.args;
 
+      const { UID_CONTRACT_MAP } = config;
+      const uid_address = UID_CONTRACT_MAP[chainId];
+      let uid = '';
+      if (uid_address) {
+        const logs = await provider.getLogs({ blockHash: item.blockHash });
+        const filterLogs = logs.find(
+          (log) =>
+            log.transactionHash === item.transactionHash &&
+            toLower(log.address) === toLower(uid_address),
+        );
+        if (filterLogs) {
+          uid = filterLogs.data;
+        }
+      }
+
       const newData: Partial<DonateHistory> = {
         from,
         to,
@@ -79,6 +95,7 @@ export class TimedTaskService {
             ? ''
             : ethers.toUtf8String(msg),
         erc20: ethers.decodeBytes32String(symbol),
+        uid: uid,
       };
 
       return newData;

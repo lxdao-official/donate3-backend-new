@@ -34,4 +34,7 @@ export class DonateHistory {
 
   @Column({ nullable: true })
   erc20: string;
+
+  @Column({ nullable: true })
+  uid: string;
 }
