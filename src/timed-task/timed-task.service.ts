@@ -121,15 +121,14 @@ export class TimedTaskService {
       await this.donateHistory.save(data);
 
       this.logger.log(
-        `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
-          data.length
+        `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${data.length
         }`,
       );
     } else {
       this.logger.log(`${new Date().toString()}: No data to update`);
     }
   }
-  @Cron('0 */5 * * * *')
+  @Cron('*/10 * * * * *')
   async handleCron() {
     try {
       Object.keys(this.providerContracts).forEach((chainId) => {
