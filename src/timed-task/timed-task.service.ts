@@ -128,7 +128,7 @@ export class TimedTaskService {
       this.logger.log(`${new Date().toString()}: No data to update`);
     }
   }
-  @Cron('*/10 * * * * *')
+  @Cron('0 */5 * * * *')
   async handleCron() {
     try {
       Object.keys(this.providerContracts).forEach((chainId) => {
