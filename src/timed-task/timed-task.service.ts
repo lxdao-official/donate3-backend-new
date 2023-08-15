@@ -121,7 +121,8 @@ export class TimedTaskService {
       await this.donateHistory.save(data);
 
       this.logger.log(
-        `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${data.length
+        `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
+          data.length
         }`,
       );
     } else {
