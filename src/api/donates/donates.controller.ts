@@ -27,35 +27,35 @@ export class DonatesController {
 
   @Get()
   @ApiOperation({
-    summary: '查询捐赠信息',
-    description: '查询某个地址所有的捐赠信息',
+    summary: 'Query donation information',
+    description: 'Query all donation information for an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: '被捐赠人的地址',
+    description: 'The address of the donor',
     required: true,
   })
   async findDonatesFromAddress(@Query() queryInfo: QueryDonateDto) {
     const data = await this.donatesService.findDonatesFromAddress(queryInfo);
-    return { data, code: 200, message: '请求成功' };
+    return data;
   }
 
   @Get('ranking')
   @ApiOperation({
-    summary: '获取捐赠排行榜',
-    description: '查询某个地址接收到的捐赠排行榜',
+    summary: 'Get donation rankings',
+    description: 'Query the list of donations received at an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: '接收捐赠的地址',
+    description: 'An address to receive donations',
     required: true,
   })
   @ApiQuery({
     name: 'chainId',
     type: 'number',
-    description: '链ID',
+    description: 'chainId',
     required: true,
   })
   async getDonationRanking(@Query() queryInfo: DonationRankingDto) {
@@ -65,13 +65,13 @@ export class DonatesController {
 
   @Get('donation-amount')
   @ApiOperation({
-    summary: '获取捐赠的所有金额',
-    description: '查询某个地址接收到的捐赠金额',
+    summary: 'Get the full amount donated',
+    description: 'Query the amount of donations received at an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: '接收捐赠的地址',
+    description: 'The address that was donated',
     required: true,
   })
   async getAllDonationAmount(@Query() queryInfo: QueryDonationAmount) {
@@ -82,13 +82,13 @@ export class DonatesController {
 
   @Get('donator-history')
   @ApiOperation({
-    summary: '获取捐赠者的捐赠历史',
-    description: '查询某个地址捐赠历史',
+    summary: `Get the donor's donation history`,
+    description: 'Query the donation history of an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: '捐赠者的地址',
+    description: `Donor's address`,
     required: true,
   })
   async getAllDonatorHistory(@Query() queryInfo: QueryDonationAmount) {
