@@ -41,9 +41,9 @@ export class TimedTaskService {
   }
 
   async getLatestData(chainId: number) {
-    const result = await this.donateHistory.find({
+    const result = await this.prismaService.donate.findMany({
       where: { chainId },
-      order: { blockNumber: 'DESC' },
+      orderBy: { blockNumber: 'desc' },
       take: 1,
     });
     return result[0];
@@ -53,7 +53,7 @@ export class TimedTaskService {
     chainId: number,
     from: number,
     to: number,
-  ): Promise<Prisma.donate_historyCreateInput[]> {
+  ): Promise<Prisma.DonateCreateInput[]> {
     const { provider, contract } = this.providerContracts[chainId];
     const transactions = await contract.queryFilter('donateRecord', from, to);
 
@@ -84,7 +84,7 @@ export class TimedTaskService {
         }
       }
 
-      const newData: Prisma.donate_historyCreateInput = {
+      const newData: Prisma.DonateCreateInput = {
         from,
         to,
         blockHash: item.blockHash,
@@ -123,8 +123,7 @@ export class TimedTaskService {
     if (data.length > 0) {
       // await this.donateHistory.save(data);
       try {
-        console.log('data', data);
-        await this.prismaService.donate_history.create({ data: data[0] });
+        await this.prismaService.donate.createMany({ data: data });
       } catch (e) {
         console.log(e.message);
       }

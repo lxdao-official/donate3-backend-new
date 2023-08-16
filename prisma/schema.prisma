@@ -10,15 +10,15 @@ datasource db {
   url               = env("DATABASE_URL")
 }
 
-model donate_history {
+model Donate {
   id              Int     @id @default(autoincrement())
   from            String
   to              String
   blockNumber     Int
   blockHash       String
   transactionHash String
-  money           Int  
-  timestamp       Int
+  money           BigInt  
+  timestamp       BigInt
   chainId         Int
   message         String?
   erc20           String
