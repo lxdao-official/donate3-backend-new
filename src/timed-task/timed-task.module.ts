@@ -3,13 +3,14 @@ import { TimedTaskService } from './timed-task.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DonateHistory } from 'src/database/donateHistory.entity';
 import { ConfigService } from '@nestjs/config';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 const getChainId = (): number => {
   return 137;
 };
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DonateHistory])],
+  imports: [TypeOrmModule.forFeature([DonateHistory]), PrismaModule],
   providers: [
     TimedTaskService,
     ConfigService,

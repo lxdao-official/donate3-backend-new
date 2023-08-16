@@ -1,3 +1,4 @@
+import { Donate } from './entities/donate.entity';
 import {
   Controller,
   Get,
@@ -19,11 +20,6 @@ import { QueryDonationAmount } from './dto/query-donation-amount.dto';
 @Controller('donates')
 export class DonatesController {
   constructor(private readonly donatesService: DonatesService) {}
-
-  // @Post()
-  // create(@Body() createDonateDto: CreateDonateDto) {
-  //   return this.donatesService.create(createDonateDto);
-  // }
 
   @Get()
   @ApiOperation({

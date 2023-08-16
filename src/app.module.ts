@@ -10,6 +10,7 @@ import LoggerMiddleware from './logger/logger.middleware';
 import { DonateHistory } from './database/donateHistory.entity';
 import { TimedTaskModule } from './timed-task/timed-task.module';
 import { DonatesModule } from './api/donates/donates.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { DonatesModule } from './api/donates/donates.module';
     ScheduleModule.forRoot(),
     TimedTaskModule,
     DonatesModule,
+    PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
