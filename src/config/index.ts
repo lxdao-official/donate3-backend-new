@@ -15,7 +15,7 @@ const CONTRACT_MAP = {
 
 const RPC_MAP = {
   5: 'https://goerli.infura.io/v3/6959166847ff4ba499178f3d110c920f',
-  // 80001: 'https://polygon-mumbai.infura.io/v3/6959166847ff4ba499178f3d110c920f',
+  80001: 'https://polygon-mumbai.infura.io/v3/6959166847ff4ba499178f3d110c920f',
   // 137: 'https://polygon-mainnet.infura.io/v3/6959166847ff4ba499178f3d110c920f',
   59144: 'https://linea-mainnet.infura.io/v3/6959166847ff4ba499178f3d110c920f', //linea
   42161:

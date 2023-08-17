@@ -1,14 +1,12 @@
-import { DonateHistory } from 'src/database/donateHistory.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateDonateDto } from './dto/create-donate.dto';
 import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOperator } from 'typeorm';
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 import { add, multiply } from 'lodash';
 import axios from 'axios';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 interface OkxResponse {
   instId: string;
@@ -17,7 +15,7 @@ interface OkxResponse {
   ts: string;
 }
 
-export interface DonateInfoWithAmount extends DonateHistory {
+export interface DonateInfoWithAmount extends Prisma.DonationCreateInput {
   amount: number;
   price: string;
 }
@@ -26,17 +24,14 @@ export interface DonateInfoWithAmount extends DonateHistory {
 export class DonatesService {
   private readonly logger = new Logger(DonatesService.name);
 
-  constructor(
-    @InjectRepository(DonateHistory)
-    private donateHistory: Repository<DonateHistory>,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   create(createDonateDto: CreateDonateDto) {
     return 'This action adds a new donate';
   }
 
   async findDonatesFromAddress(params: QueryDonateDto) {
-    const result = await this.donateHistory.find({
+    const result = await this.prismaService.donation.findMany({
       where: { to: params.address },
     });
     return result;
@@ -55,21 +50,33 @@ export class DonatesService {
   }
 
   async getDonationRanking(address: string, chainId: number) {
-    const queryBuilder = this.donateHistory.createQueryBuilder('donate');
+    const result = await this.prismaService.donation.findMany({
+      where: {
+        to: address,
+        chainId: Number(chainId),
+      },
+    });
 
-    const result = await queryBuilder
-      .select('donate.from', 'address')
-      .addSelect('SUM(CAST(donate.money AS numeric))', 'totaldonation')
-      .where('donate.to = :address', { address })
-      .andWhere('donate.chainId = :chainId', { chainId })
-      .andWhere('donate.money IS NOT NULL')
-      .groupBy('donate.from')
-      .orderBy('totaldonation', 'DESC')
-      .getRawMany();
-    const resultsWithRank = result.map((entry, index) => ({
-      ...entry,
-      top: (index + 1).toString(),
-    }));
+    const donateFromAddressMap = {};
+    result.forEach((donate) => {
+      const donateObj = donateFromAddressMap[donate.from];
+      if (donateObj) {
+        donateObj.totaldonation += Number(donate.money);
+        donateFromAddressMap[donate.from] = donateObj;
+      } else {
+        donateFromAddressMap[donate.from] = {
+          address: donate.from,
+          totaldonation: Number(donate.money),
+        };
+      }
+    });
+
+    const resultsWithRank = Object.values<{
+      address: string;
+      totaldonation: number;
+    }>(donateFromAddressMap)
+      .sort((a, b) => b.totaldonation - a.totaldonation)
+      .map((i, index) => ({ ...i, top: index + 1 }));
 
     return resultsWithRank;
   }
@@ -109,7 +116,7 @@ export class DonatesService {
   }
 
   getDonateHistoryWithAmount(
-    donateList: DonateHistory[],
+    donateList: Prisma.DonationCreateInput[],
     tokenPrice: OkxResponse[],
   ): DonateInfoWithAmount[] {
     const donateWithTokenValue = donateList.map((donate) => {
@@ -158,7 +165,7 @@ export class DonatesService {
 
   async getAllDonatorHistory(address: string) {
     const priceList = await this.getTokenPrice();
-    const donatorHistory = await this.donateHistory.find({
+    const donatorHistory = await this.prismaService.donation.findMany({
       where: { from: address },
     });
     const donatorAmountMap = this.getDonateHistoryWithAmount(

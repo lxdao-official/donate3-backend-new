@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TimedTaskService } from './timed-task.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DonateHistory } from 'src/database/donateHistory.entity';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from 'src/prisma/prisma.module';
 
@@ -10,11 +8,10 @@ const getChainId = (): number => {
 };
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DonateHistory]), PrismaModule],
+  imports: [PrismaModule],
   providers: [
     TimedTaskService,
     ConfigService,
-    DonateHistory,
     {
       provide: 'CHAIN_ID_137',
       useFactory: getChainId,
@@ -28,6 +25,6 @@ const getChainId = (): number => {
       useFactory: () => 5,
     },
   ],
-  exports: [ConfigService, DonateHistory],
+  exports: [ConfigService],
 })
 export class TimedTaskModule {}
