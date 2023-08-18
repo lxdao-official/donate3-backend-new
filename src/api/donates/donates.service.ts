@@ -9,6 +9,7 @@ import { FindManyOptions, FindOperator } from 'typeorm';
 import { ethers } from 'ethers';
 import { add, multiply } from 'lodash';
 import axios from 'axios';
+import { DonationRankingByUsdtDto } from './dto/donation-ranking-by-usdt.dto.ts';
 
 interface OkxResponse {
   instId: string;
@@ -166,5 +167,44 @@ export class DonatesService {
       priceList,
     );
     return donatorAmountMap;
+  }
+
+  async getDonationRankByUsdt(
+    toAddress: string,
+  ): Promise<DonationRankingByUsdtDto[]> {
+    const donateList = await this.donateHistory.find({
+      where: { to: toAddress },
+      select: ['from', 'money', 'erc20'],
+    });
+
+    const tokenPriceList = await this.getTokenPrice();
+    const addressToTotalDonationMap = new Map<string, number>();
+
+    donateList.forEach((donate) => {
+      const tokenPrice = tokenPriceList.find(
+        (p) => p.instId === `${donate.erc20}-USDT`,
+      );
+      const price = tokenPrice?.markPx || '0';
+      const amountInUSDT = multiply(+price, +ethers.formatEther(donate.money));
+
+      if (addressToTotalDonationMap.has(donate.from)) {
+        addressToTotalDonationMap.set(
+          donate.from,
+          addressToTotalDonationMap.get(donate.from) + amountInUSDT,
+        );
+      } else {
+        addressToTotalDonationMap.set(donate.from, amountInUSDT);
+      }
+    });
+
+    const sortedRanking = Array.from(addressToTotalDonationMap.entries())
+      .map(([address, totalDonation]) => ({ address, totalDonation }))
+      .sort((a, b) => b.totalDonation - a.totalDonation)
+      .map((entry, index) => ({
+        ...entry,
+        top: (index + 1).toString(),
+      }));
+
+    return sortedRanking;
   }
 }

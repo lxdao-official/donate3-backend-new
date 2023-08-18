@@ -33,7 +33,7 @@ export class DonatesController {
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: 'The address of the donor',
+    description: `Recipient's address`,
     required: true,
   })
   async findDonatesFromAddress(@Query() queryInfo: QueryDonateDto) {
@@ -43,13 +43,13 @@ export class DonatesController {
 
   @Get('ranking')
   @ApiOperation({
-    summary: 'Get donation rankings',
+    summary: 'Get donation ranking by chainId',
     description: 'Query the list of donations received at an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: 'An address to receive donations',
+    description: `Recipient's address`,
     required: true,
   })
   @ApiQuery({
@@ -71,7 +71,7 @@ export class DonatesController {
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: 'The address that was donated',
+    description: `Recipient's address`,
     required: true,
   })
   async getAllDonationAmount(@Query() queryInfo: QueryDonationAmount) {
@@ -97,6 +97,22 @@ export class DonatesController {
     return result;
   }
 
+  @Get('donation-ranking-by-usdt')
+  @ApiOperation({
+    summary: 'Get donation ranking by USDT',
+    description:
+      'Query the ranking of donations received in USDT for a specific recipient address',
+  })
+  @ApiQuery({
+    name: 'address',
+    type: 'string',
+    description: `Recipient's address`,
+    required: true,
+  })
+  async getDonationRankByUsdt(@Query('address') address: string) {
+    const ranking = await this.donatesService.getDonationRankByUsdt(address);
+    return ranking;
+  }
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateDonateDto: UpdateDonateDto) {
   //   return this.donatesService.update(+id, updateDonateDto);
