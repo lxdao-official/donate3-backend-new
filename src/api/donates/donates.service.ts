@@ -204,7 +204,16 @@ export class DonatesService {
         ...entry,
         top: (index + 1).toString(),
       }));
+    const totalDonationSum = sortedRanking.reduce(
+      (sum, entry) => sum + entry.totalDonation,
+      0,
+    );
 
-    return sortedRanking;
+    const rankedWithTotalSum = sortedRanking.map((entry) => ({
+      ...entry,
+      totalDonationSum,
+    }));
+
+    return rankedWithTotalSum;
   }
 }

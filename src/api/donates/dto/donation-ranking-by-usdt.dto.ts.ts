@@ -10,4 +10,5 @@ export class DonationRankingByUsdtDto {
 
   @IsNotEmpty({ message: 'top is required' })
   top: string;
+  totalDonationSum: number;
 }
