@@ -179,9 +179,9 @@ export class DonatesService {
   async getDonationRankByUsdt(
     toAddress: string,
   ): Promise<DonationRankingByUsdtDto[]> {
-    const donateList = await this.donateHistory.find({
+    const donateList = await this.prismaService.donation.findMany({
       where: { to: toAddress },
-      select: ['from', 'money', 'erc20'],
+      select: { from: true, money: true, erc20: true },
     });
 
     const tokenPriceList = await this.getTokenPrice();
