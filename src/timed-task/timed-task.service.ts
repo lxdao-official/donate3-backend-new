@@ -1,13 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { ethers, Contract, EventLog } from 'ethers';
-import { DonateHistory } from 'src/database/donateHistory.entity';
-import { Repository } from 'typeorm';
 import config from 'src/config';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { toLower } from 'lodash';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TimedTaskService {
@@ -18,15 +17,16 @@ export class TimedTaskService {
 
   constructor(
     private configService: ConfigService,
-    @InjectRepository(DonateHistory)
-    private donateHistory: Repository<DonateHistory>,
+    private readonly prismaService: PrismaService,
   ) {
     const { CONTRACT_MAP, abi, abiUid, RPC_MAP, useUidChainId } = config;
+    const INFURA_APIKEY = this.configService.get('INFURA_APIKEY');
     this.providerContracts = {};
     Object.keys(RPC_MAP).forEach((chainId) => {
       const parsedChainId = parseInt(chainId, 10);
       if (CONTRACT_MAP[parsedChainId]) {
-        const provider = new ethers.JsonRpcProvider(RPC_MAP[parsedChainId]);
+        const url = RPC_MAP[parsedChainId] + INFURA_APIKEY;
+        const provider = new ethers.JsonRpcProvider(url);
         const contract = new ethers.Contract(
           CONTRACT_MAP[parsedChainId],
           useUidChainId.includes(parsedChainId) ? abiUid : abi,
@@ -38,9 +38,9 @@ export class TimedTaskService {
   }
 
   async getLatestData(chainId: number) {
-    const result = await this.donateHistory.find({
+    const result = await this.prismaService.donation.findMany({
       where: { chainId },
-      order: { blockNumber: 'DESC' },
+      orderBy: { blockNumber: 'desc' },
       take: 1,
     });
     return result[0];
@@ -50,7 +50,7 @@ export class TimedTaskService {
     chainId: number,
     from: number,
     to: number,
-  ): Promise<Partial<DonateHistory>[]> {
+  ): Promise<Prisma.DonationCreateInput[]> {
     const { provider, contract } = this.providerContracts[chainId];
     const transactions = await contract.queryFilter('donateRecord', from, to);
 
@@ -81,15 +81,15 @@ export class TimedTaskService {
         }
       }
 
-      const newData: Partial<DonateHistory> = {
+      const newData: Prisma.DonationCreateInput = {
         from,
         to,
         blockHash: item.blockHash,
         blockNumber: item.blockNumber,
-        money: amount,
+        money: String(amount),
         transactionHash: item.transactionHash,
-        timestamp: block.timestamp * 1000,
-        chainId: transactionInfo.chainId as unknown as number,
+        timestamp: (block.timestamp * 1000).toString(),
+        chainId: Number(transactionInfo.chainId),
         message:
           (msg.startsWith('0x') ? msg : '0x' + msg) === '0x00'
             ? ''
@@ -118,8 +118,11 @@ export class TimedTaskService {
     );
 
     if (data.length > 0) {
-      await this.donateHistory.save(data);
-
+      try {
+        await this.prismaService.donation.createMany({ data: data });
+      } catch (e) {
+        console.log(e.message);
+      }
       this.logger.log(
         `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
           data.length
@@ -129,7 +132,7 @@ export class TimedTaskService {
       this.logger.log(`${new Date().toString()}: No data to update`);
     }
   }
-  @Cron('0 */5 * * * *')
+  @Cron('0 * * * * *')
   async handleCron() {
     try {
       Object.keys(this.providerContracts).forEach((chainId) => {
