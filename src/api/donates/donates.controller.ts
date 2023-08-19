@@ -15,6 +15,7 @@ import { QueryDonateDto } from './dto/query-donate.dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { DonationRankingDto } from './dto/donation-ranking.dto';
 import { QueryDonationAmount } from './dto/query-donation-amount.dto';
+import { TotalDonationSumDto } from './dto/total-donation-sum.dto';
 
 @Controller('donates')
 export class DonatesController {
@@ -112,6 +113,27 @@ export class DonatesController {
   async getDonationRankByUsdt(@Query('address') address: string) {
     const ranking = await this.donatesService.getDonationRankByUsdt(address);
     return ranking;
+  }
+
+  @Get('total-donation-sum')
+  @ApiOperation({
+    summary: 'Get the total donation sum of USDT',
+    description:
+      'Returns the total donation amount of the address indicated by the Usdt',
+  })
+  @ApiQuery({
+    name: 'address',
+    description: `Recipient's address`,
+    required: true,
+  })
+  async getTotalDonationSum(
+    @Query() query: TotalDonationSumDto,
+  ): Promise<number> {
+    const { address } = query;
+    const totalDonationSum = await this.donatesService.getTotalDonationSum(
+      address,
+    );
+    return totalDonationSum;
   }
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateDonateDto: UpdateDonateDto) {

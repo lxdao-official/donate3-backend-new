@@ -204,16 +204,15 @@ export class DonatesService {
         ...entry,
         top: (index + 1).toString(),
       }));
-    const totalDonationSum = sortedRanking.reduce(
+    return sortedRanking;
+  }
+
+  async getTotalDonationSum(address: string): Promise<number> {
+    const donationRanking = await this.getDonationRankByUsdt(address);
+    const totalDonationSum = donationRanking.reduce(
       (sum, entry) => sum + entry.totalDonation,
       0,
     );
-
-    const rankedWithTotalSum = sortedRanking.map((entry) => ({
-      ...entry,
-      totalDonationSum,
-    }));
-
-    return rankedWithTotalSum;
+    return totalDonationSum;
   }
 }
