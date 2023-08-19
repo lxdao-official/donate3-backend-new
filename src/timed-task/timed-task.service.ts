@@ -20,11 +20,13 @@ export class TimedTaskService {
     private readonly prismaService: PrismaService,
   ) {
     const { CONTRACT_MAP, abi, abiUid, RPC_MAP, useUidChainId } = config;
+    const INFURA_APIKEY = this.configService.get('INFURA_APIKEY');
     this.providerContracts = {};
     Object.keys(RPC_MAP).forEach((chainId) => {
       const parsedChainId = parseInt(chainId, 10);
       if (CONTRACT_MAP[parsedChainId]) {
-        const provider = new ethers.JsonRpcProvider(RPC_MAP[parsedChainId]);
+        const url = RPC_MAP[parsedChainId] + INFURA_APIKEY;
+        const provider = new ethers.JsonRpcProvider(url);
         const contract = new ethers.Contract(
           CONTRACT_MAP[parsedChainId],
           useUidChainId.includes(parsedChainId) ? abiUid : abi,

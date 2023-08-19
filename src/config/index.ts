@@ -14,16 +14,15 @@ const CONTRACT_MAP = {
 };
 
 const RPC_MAP = {
-  5: 'https://goerli.infura.io/v3/6959166847ff4ba499178f3d110c920f',
-  80001: 'https://polygon-mumbai.infura.io/v3/6959166847ff4ba499178f3d110c920f',
-  // 137: 'https://polygon-mainnet.infura.io/v3/6959166847ff4ba499178f3d110c920f',
-  59144: 'https://linea-mainnet.infura.io/v3/6959166847ff4ba499178f3d110c920f', //linea
-  42161:
-    'https://arbitrum-mainnet.infura.io/v3/6959166847ff4ba499178f3d110c920f', //arbitrum
-  10: 'https://optimism-mainnet.infura.io/v3/6959166847ff4ba499178f3d110c920f', //optimism
-  1: 'https://mainnet.infura.io/v3/6959166847ff4ba499178f3d110c920f', //eth mainnet
-  11155111: 'https://sepolia.infura.io/v3/6959166847ff4ba499178f3d110c920f', //optimism
-  420: 'https://optimism-goerli.infura.io/v3/6959166847ff4ba499178f3d110c920f',
+  5: `https://goerli.infura.io/v3/`,
+  80001: `https://polygon-mumbai.infura.io/v3/`,
+  137: 'https://polygon-mainnet.infura.io/v3/',
+  59144: `https://linea-mainnet.infura.io/v3/`, //linea
+  42161: `https://arbitrum-mainnet.infura.io/v3/`, //arbitrum
+  10: `https://optimism-mainnet.infura.io/v3/`, //optimism
+  1: `https://mainnet.infura.io/v3/`, //eth mainnet
+  11155111: `https://sepolia.infura.io/v3/`, //optimism
+  420: `https://optimism-goerli.infura.io/v3/`,
 };
 
 const UID_CONTRACT_MAP = {
