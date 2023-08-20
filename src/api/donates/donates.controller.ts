@@ -1,3 +1,4 @@
+import { Donate } from './entities/donate.entity';
 import {
   Controller,
   Get,
@@ -15,47 +16,43 @@ import { QueryDonateDto } from './dto/query-donate.dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { DonationRankingDto } from './dto/donation-ranking.dto';
 import { QueryDonationAmount } from './dto/query-donation-amount.dto';
+import { TotalDonationSumDto } from './dto/total-donation-sum.dto';
 
 @Controller('donates')
 export class DonatesController {
   constructor(private readonly donatesService: DonatesService) {}
 
-  // @Post()
-  // create(@Body() createDonateDto: CreateDonateDto) {
-  //   return this.donatesService.create(createDonateDto);
-  // }
-
   @Get()
   @ApiOperation({
-    summary: '查询捐赠信息',
-    description: '查询某个地址所有的捐赠信息',
+    summary: 'Query donation information',
+    description: 'Query all donation information for an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: '被捐赠人的地址',
+    description: `Recipient's address`,
     required: true,
   })
   async findDonatesFromAddress(@Query() queryInfo: QueryDonateDto) {
     const data = await this.donatesService.findDonatesFromAddress(queryInfo);
-    return { data, code: 200, message: '请求成功' };
+    return data;
   }
 
   @Get('ranking')
   @ApiOperation({
-    summary: '获取捐赠排行榜',
-    description: '查询某个地址接收到的捐赠排行榜',
+    summary: 'Get donation ranking by chainId',
+    description: 'Query the list of donations received at an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: '接收捐赠的地址',
+    description: `Recipient's address`,
     required: true,
   })
   @ApiQuery({
     name: 'chainId',
     type: 'number',
-    description: '链ID',
+    description: 'chainId',
     required: true,
   })
   async getDonationRanking(@Query() queryInfo: DonationRankingDto) {
@@ -65,13 +62,13 @@ export class DonatesController {
 
   @Get('donation-amount')
   @ApiOperation({
-    summary: '获取捐赠的所有金额',
-    description: '查询某个地址接收到的捐赠金额',
+    summary: 'Get the full amount donated',
+    description: 'Query the amount of donations received at an address',
   })
   @ApiQuery({
     name: 'address',
     type: 'string',
-    description: '接收捐赠的地址',
+    description: `Recipient's address`,
     required: true,
   })
   async getAllDonationAmount(@Query() queryInfo: QueryDonationAmount) {
@@ -80,6 +77,60 @@ export class DonatesController {
     return result;
   }
 
+  @Get('donator-history')
+  @ApiOperation({
+    summary: `Get the donor's donation history`,
+    description: 'Query the donation history of an address',
+  })
+  @ApiQuery({
+    name: 'address',
+    type: 'string',
+    description: `Donor's address`,
+    required: true,
+  })
+  async getAllDonatorHistory(@Query() queryInfo: QueryDonationAmount) {
+    const { address } = queryInfo;
+    const result = await this.donatesService.getAllDonatorHistory(address);
+    return result;
+  }
+
+  @Get('donation-ranking-by-usdt')
+  @ApiOperation({
+    summary: 'Get donation ranking by USDT',
+    description:
+      'Query the ranking of donations received in USDT for a specific recipient address',
+  })
+  @ApiQuery({
+    name: 'address',
+    type: 'string',
+    description: `Recipient's address`,
+    required: true,
+  })
+  async getDonationRankByUsdt(@Query('address') address: string) {
+    const ranking = await this.donatesService.getDonationRankByUsdt(address);
+    return ranking;
+  }
+
+  @Get('total-donation-sum')
+  @ApiOperation({
+    summary: 'Get the total donation sum of USDT',
+    description:
+      'Returns the total donation amount of the address indicated by the Usdt',
+  })
+  @ApiQuery({
+    name: 'address',
+    description: `Recipient's address`,
+    required: true,
+  })
+  async getTotalDonationSum(
+    @Query() query: TotalDonationSumDto,
+  ): Promise<number> {
+    const { address } = query;
+    const totalDonationSum = await this.donatesService.getTotalDonationSum(
+      address,
+    );
+    return totalDonationSum;
+  }
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateDonateDto: UpdateDonateDto) {
   //   return this.donatesService.update(+id, updateDonateDto);

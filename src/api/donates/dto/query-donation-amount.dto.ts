@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 
 export class QueryDonationAmount {
-  @IsNotEmpty({ message: '地址不能为空' })
+  @IsNotEmpty({ message: 'address is required' })
   address: string;
 }

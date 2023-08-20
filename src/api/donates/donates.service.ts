@@ -1,29 +1,38 @@
-import { DonateHistory } from 'src/database/donateHistory.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateDonateDto } from './dto/create-donate.dto';
 import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, FindOperator } from 'typeorm';
-import { ethers } from 'ethers';
+import { BigNumberish, ethers } from 'ethers';
 import { add, multiply } from 'lodash';
 import axios from 'axios';
+import { DonationRankingByUsdtDto } from './dto/donation-ranking-by-usdt.dto.ts';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+
+interface OkxResponse {
+  instId: string;
+  instType: string;
+  markPx: string;
+  ts: string;
+}
+
+export interface DonateInfoWithAmount extends Prisma.DonationCreateInput {
+  amount: number;
+  price: string;
+}
+
 @Injectable()
 export class DonatesService {
   private readonly logger = new Logger(DonatesService.name);
 
-  constructor(
-    @InjectRepository(DonateHistory)
-    private donateHistory: Repository<DonateHistory>,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   create(createDonateDto: CreateDonateDto) {
     return 'This action adds a new donate';
   }
 
   async findDonatesFromAddress(params: QueryDonateDto) {
-    const result = await this.donateHistory.find({
+    const result = await this.prismaService.donation.findMany({
       where: { to: params.address },
     });
     return result;
@@ -42,27 +51,39 @@ export class DonatesService {
   }
 
   async getDonationRanking(address: string, chainId: number) {
-    const queryBuilder = this.donateHistory.createQueryBuilder('donate');
+    const result = await this.prismaService.donation.findMany({
+      where: {
+        to: address,
+        chainId: Number(chainId),
+      },
+    });
 
-    const result = await queryBuilder
-      .select('donate.from', 'address')
-      .addSelect('SUM(CAST(donate.money AS numeric))', 'totaldonation')
-      .where('donate.to = :address', { address })
-      .andWhere('donate.chainId = :chainId', { chainId })
-      .andWhere('donate.money IS NOT NULL')
-      .groupBy('donate.from')
-      .orderBy('totaldonation', 'DESC')
-      .getRawMany();
-    const resultsWithRank = result.map((entry, index) => ({
-      ...entry,
-      top: (index + 1).toString(),
-    }));
+    const donateFromAddressMap = {};
+    result.forEach((donate) => {
+      const donateObj = donateFromAddressMap[donate.from];
+      if (donateObj) {
+        donateObj.totaldonation += Number(donate.money);
+        donateFromAddressMap[donate.from] = donateObj;
+      } else {
+        donateFromAddressMap[donate.from] = {
+          address: donate.from,
+          totaldonation: Number(donate.money),
+        };
+      }
+    });
+
+    const resultsWithRank = Object.values<{
+      address: string;
+      totaldonation: number;
+    }>(donateFromAddressMap)
+      .sort((a, b) => b.totaldonation - a.totaldonation)
+      .map((i, index) => ({ ...i, top: index + 1 }));
 
     return resultsWithRank;
   }
 
-  formateDataFromChainId(data: DonateHistory[]) {
-    const chainIdMap = new Map<number, DonateHistory[]>();
+  formateDataFromChainId(data: DonateInfoWithAmount[]) {
+    const chainIdMap = new Map<number, DonateInfoWithAmount[]>();
     data.forEach((info) => {
       const chainId = info.chainId;
       if (chainIdMap.get(chainId)) {
@@ -76,7 +97,7 @@ export class DonatesService {
     return chainIdMap;
   }
 
-  async getTokenPrice() {
+  async getTokenPrice(): Promise<OkxResponse[]> {
     try {
       const result = await axios.get(
         'https://www.okx.com/api/v5/public/mark-price?instType=MARGIN',
@@ -95,49 +116,110 @@ export class DonatesService {
     }
   }
 
-  getChainDonateToken(chainIdMap: Map<number, DonateHistory[]>) {
-    const chainAmountMap = new Map<number, Map<string, number>>();
-    chainIdMap.forEach((chainArr, chainId) => {
-      const amountMap = new Map<string, number>();
-      chainArr.forEach((info) => {
-        const erc20 = info.erc20;
-        const money = +ethers.formatEther(info.money);
-        if (amountMap.get(erc20)) {
-          const amount = amountMap.get(erc20);
-          amountMap.set(erc20, add(amount, money));
-        } else {
-          amountMap.set(erc20, money);
-        }
-      });
-      chainAmountMap.set(chainId, amountMap);
+  getDonateHistoryWithAmount(
+    donateList: Prisma.DonationCreateInput[],
+    tokenPrice: OkxResponse[],
+  ): DonateInfoWithAmount[] {
+    const donateWithTokenValue = donateList.map((donate) => {
+      const info = tokenPrice.find((p) => p.instId === `${donate.erc20}-USDT`);
+      let amount = 0;
+      if (info) {
+        amount = multiply(+info.markPx, +ethers.formatEther(donate.money));
+      }
+      return {
+        ...donate,
+        amount,
+        price: info?.markPx || '0',
+      };
     });
-    return chainAmountMap;
+    return donateWithTokenValue;
   }
 
-  getTokenAmount(amountMap, priceList) {
-    const resultTotalMoney = [];
-    amountMap.forEach((amount, key) => {
-      const info = priceList.find((p) => p.instId === `${key}-USDT`);
-      const price = info?.markPx || 0;
-      let totalMoney = 0;
-      if (price) {
-        totalMoney = multiply(amount, +price);
-      }
-      resultTotalMoney.push({ token: key, totalMoney, price, num: amount });
+  getResultTotalMoney(chainIdMap) {
+    const resultTotalMoney = {};
+    chainIdMap.forEach((donateList, chainId) => {
+      const ChainIdAmount = { token: '', totalMoney: 0, price: 0, num: 0 };
+      donateList.forEach((donate) => {
+        ChainIdAmount.token = donate.erc20;
+        ChainIdAmount.totalMoney += donate.amount;
+        ChainIdAmount.price = +donate.price;
+        ChainIdAmount.num += +ethers.formatEther(donate.money);
+      });
+      resultTotalMoney[chainId] = ChainIdAmount;
     });
     return resultTotalMoney;
   }
 
   async getAllDonationAmount(address: string) {
     const allHistory = await this.findDonatesFromAddress({ address });
-    const chainIdMap = this.formateDataFromChainId(allHistory);
     const priceList = await this.getTokenPrice();
-    const chainAmountMap = this.getChainDonateToken(chainIdMap);
-    const resultTotalMoney = {};
-    chainAmountMap.forEach((amountMap, chainId) => {
-      const amountArr = this.getTokenAmount(amountMap, priceList);
-      resultTotalMoney[chainId] = amountArr;
-    });
+    const allHistoryWithAmount = this.getDonateHistoryWithAmount(
+      allHistory,
+      priceList,
+    );
+
+    const chainIdMap = this.formateDataFromChainId(allHistoryWithAmount);
+    const resultTotalMoney = this.getResultTotalMoney(chainIdMap);
+
     return resultTotalMoney;
+  }
+
+  async getAllDonatorHistory(address: string) {
+    const priceList = await this.getTokenPrice();
+    const donatorHistory = await this.prismaService.donation.findMany({
+      where: { from: address },
+    });
+    const donatorAmountMap = this.getDonateHistoryWithAmount(
+      donatorHistory,
+      priceList,
+    );
+    return donatorAmountMap;
+  }
+
+  async getDonationRankByUsdt(
+    toAddress: string,
+  ): Promise<DonationRankingByUsdtDto[]> {
+    const donateList = await this.prismaService.donation.findMany({
+      where: { to: toAddress },
+      select: { from: true, money: true, erc20: true },
+    });
+
+    const tokenPriceList = await this.getTokenPrice();
+    const addressToTotalDonationMap = new Map<string, number>();
+
+    donateList.forEach((donate) => {
+      const tokenPrice = tokenPriceList.find(
+        (p) => p.instId === `${donate.erc20}-USDT`,
+      );
+      const price = tokenPrice?.markPx || '0';
+      const amountInUSDT = multiply(+price, +ethers.formatEther(donate.money));
+
+      if (addressToTotalDonationMap.has(donate.from)) {
+        addressToTotalDonationMap.set(
+          donate.from,
+          addressToTotalDonationMap.get(donate.from) + amountInUSDT,
+        );
+      } else {
+        addressToTotalDonationMap.set(donate.from, amountInUSDT);
+      }
+    });
+
+    const sortedRanking = Array.from(addressToTotalDonationMap.entries())
+      .map(([address, totalDonation]) => ({ address, totalDonation }))
+      .sort((a, b) => b.totalDonation - a.totalDonation)
+      .map((entry, index) => ({
+        ...entry,
+        top: (index + 1).toString(),
+      }));
+    return sortedRanking;
+  }
+
+  async getTotalDonationSum(address: string): Promise<number> {
+    const donationRanking = await this.getDonationRankByUsdt(address);
+    const totalDonationSum = donationRanking.reduce(
+      (sum, entry) => sum + entry.totalDonation,
+      0,
+    );
+    return totalDonationSum;
   }
 }

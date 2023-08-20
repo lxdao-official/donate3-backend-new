@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
 import { DonatesService } from './donates.service';
 import { DonatesController } from './donates.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DonateHistory } from 'src/database/donateHistory.entity';
-import { DonationRankingDto } from './dto/donation-ranking.dto';
+import { PrismaModule } from 'src/prisma/prisma.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([DonateHistory])],
+  imports: [PrismaModule],
   controllers: [DonatesController],
   providers: [DonatesService],
 })

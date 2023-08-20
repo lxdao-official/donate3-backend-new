@@ -2,9 +2,9 @@
 import { IsNotEmpty } from 'class-validator';
 
 export class DonationRankingDto {
-  @IsNotEmpty({ message: '地址不能为空' })
+  @IsNotEmpty({ message: 'address is required' })
   address: string;
 
-  @IsNotEmpty({ message: 'chainId不能为空' })
+  @IsNotEmpty({ message: 'chainId is required' })
   chainId: number;
 }
