@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateDonateDto } from './dto/create-donate.dto';
 import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
-import { BigNumberish, ethers } from 'ethers';
-import { add, multiply } from 'lodash';
+import { ethers } from 'ethers';
+import { multiply } from 'lodash';
 import axios from 'axios';
 import { DonationRankingByUsdtDto } from './dto/donation-ranking-by-usdt.dto.ts';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -27,14 +27,51 @@ export class DonatesService {
 
   constructor(private readonly prismaService: PrismaService) {}
 
-  create(createDonateDto: CreateDonateDto) {
-    return 'This action adds a new donate';
+  async findDonatesList(queryInfo: QueryDonateDto) {
+    const {
+      from,
+      to,
+      message,
+      chainIds = [],
+      tokens = [],
+      uid,
+      page = 0,
+      size = 10,
+      orderBy = {},
+    } = queryInfo;
+    const filterInfo: Prisma.DonationWhereInput = {
+      from: from || '',
+      to: to || '',
+      uid: uid || '',
+    };
+    if (chainIds.length > 0) {
+      filterInfo.chainId = { in: chainIds };
+    }
+    if (tokens.length > 0) {
+      filterInfo.erc20 = { in: tokens };
+    }
+    if (message) {
+      filterInfo.message = { contains: message, mode: 'insensitive' };
+    }
+    const where = Object.values(filterInfo).find((item) => !!item)
+      ? filterInfo
+      : {};
+    const data = await this.findDonates({
+      where,
+      skip: page * size,
+      take: size,
+      orderBy,
+    });
+
+    const allNumber = await this.prismaService.donation.count({
+      where,
+    });
+
+    return { content: data, page, size, total: allNumber };
   }
 
-  async findDonatesFromAddress(params: QueryDonateDto) {
-    const result = await this.prismaService.donation.findMany({
-      where: { to: params.address },
-    });
+  async findDonates(params: Prisma.DonationFindManyArgs) {
+    const result = await this.prismaService.donation.findMany(params);
     return result;
   }
 
@@ -151,7 +188,9 @@ export class DonatesService {
   }
 
   async getAllDonationAmount(address: string) {
-    const allHistory = await this.findDonatesFromAddress({ address });
+    const allHistory = await this.findDonates({
+      where: { to: address },
+    });
     const priceList = await this.getTokenPrice();
     const allHistoryWithAmount = this.getDonateHistoryWithAmount(
       allHistory,

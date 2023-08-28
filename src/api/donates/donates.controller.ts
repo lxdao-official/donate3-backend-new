@@ -13,28 +13,24 @@ import { DonatesService } from './donates.service';
 import { CreateDonateDto } from './dto/create-donate.dto';
 import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { DonationRankingDto } from './dto/donation-ranking.dto';
 import { QueryDonationAmount } from './dto/query-donation-amount.dto';
 import { TotalDonationSumDto } from './dto/total-donation-sum.dto';
+import { Prisma } from '@prisma/client';
 
 @Controller('donates')
 export class DonatesController {
   constructor(private readonly donatesService: DonatesService) {}
 
-  @Get()
+  @Post()
   @ApiOperation({
     summary: 'Query donation information',
-    description: 'Query all donation information for an address',
+    description: 'Query all donation information',
   })
-  @ApiQuery({
-    name: 'address',
-    type: 'string',
-    description: `Recipient's address`,
-    required: true,
-  })
-  async findDonatesFromAddress(@Query() queryInfo: QueryDonateDto) {
-    const data = await this.donatesService.findDonatesFromAddress(queryInfo);
+  @ApiBody({ type: QueryDonateDto })
+  async findDonatesFromAddress(@Body() queryInfo: QueryDonateDto) {
+    const data = await this.donatesService.findDonatesList(queryInfo);
     return data;
   }
 
