@@ -30,7 +30,7 @@ export class DonatesService {
   async findDonatesList(queryInfo: QueryDonateDto) {
     const {
       from,
-      tos,
+      tos = [],
       message,
       chainIds = [],
       tokens = [],
