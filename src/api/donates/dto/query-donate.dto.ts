@@ -9,22 +9,22 @@ export class QueryDonateDto {
   })
   from: string;
 
-  @ApiProperty({
-    required: false,
-    default: '0xe395B9bA2F93236489ac953146485C435D1A267B',
+  @ApiPropertyOptional({
+    type: [String],
+    default: ['0xe395B9bA2F93236489ac953146485C435D1A267B'],
   })
-  to: string;
+  tos: string[];
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional()
   message: string;
 
-  @ApiProperty({ type: [Number], required: false, default: [59144] })
+  @ApiPropertyOptional({ type: [Number], default: [59144] })
   chainIds: number[];
 
-  @ApiProperty({ type: [String], required: false, default: ['LINEA'] })
+  @ApiPropertyOptional({ type: [String], default: ['LINEA'] })
   tokens: string[];
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional()
   uid: string;
 
   @ApiProperty({ required: true, default: 0 })

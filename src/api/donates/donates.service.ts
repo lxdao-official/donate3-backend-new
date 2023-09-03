@@ -30,7 +30,7 @@ export class DonatesService {
   async findDonatesList(queryInfo: QueryDonateDto) {
     const {
       from,
-      to,
+      tos,
       message,
       chainIds = [],
       tokens = [],
@@ -41,9 +41,11 @@ export class DonatesService {
     } = queryInfo;
     const filterInfo: Prisma.DonationWhereInput = {
       from: from || '',
-      to: to || '',
       uid: uid || '',
     };
+    if (tos.length > 0) {
+      filterInfo.to = { in: tos };
+    }
     if (chainIds.length > 0) {
       filterInfo.chainId = { in: chainIds };
     }
