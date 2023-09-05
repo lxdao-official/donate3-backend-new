@@ -70,7 +70,6 @@ export class DonatesService {
     });
 
     const priceList = await this.getTokenPrice();
-    console.log('priceList', priceList);
     const dataWithAmount = this.getDonateHistoryWithAmount(data, priceList);
 
     return { content: dataWithAmount, page, size, total: allNumber };
