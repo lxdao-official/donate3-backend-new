@@ -69,7 +69,11 @@ export class DonatesService {
       where,
     });
 
-    return { content: data, page, size, total: allNumber };
+    const priceList = await this.getTokenPrice();
+    console.log('priceList', priceList);
+    const dataWithAmount = this.getDonateHistoryWithAmount(data, priceList);
+
+    return { content: dataWithAmount, page, size, total: allNumber };
   }
 
   async findDonates(params: Prisma.DonationFindManyArgs) {
