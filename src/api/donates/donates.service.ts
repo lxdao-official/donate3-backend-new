@@ -35,8 +35,8 @@ export class DonatesService {
       orderBy = {},
     } = queryInfo;
     const filterInfo: Prisma.DonationWhereInput = {
-      from: from || '',
-      uid: uid || '',
+      from: from || { not: { in: [''] } },
+      uid: uid || { not: { in: [''] } },
     };
     if (tos.length > 0) {
       filterInfo.to = { in: tos };
