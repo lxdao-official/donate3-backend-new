@@ -16,11 +16,6 @@ interface OkxResponse {
   ts: string;
 }
 
-export interface DonateInfoWithAmount extends Prisma.DonationCreateInput {
-  amount: number;
-  price: string;
-}
-
 @Injectable()
 export class DonatesService {
   private readonly logger = new Logger(DonatesService.name);
@@ -84,8 +79,11 @@ export class DonatesService {
     return `This action returns a #${id} donate`;
   }
 
-  update(id: number, updateDonateDto: UpdateDonateDto) {
-    return `This action updates a #${id} donate`;
+  async updateAllDataPrice(updateDonateDto: Prisma.DonationUpdateArgs[]) {
+    const updateQueue = updateDonateDto.map((item) => {
+      return this.prismaService.donation.update(item);
+    });
+    await this.prismaService.$transaction(updateQueue);
   }
 
   remove(id: number) {
@@ -104,28 +102,28 @@ export class DonatesService {
     result.forEach((donate) => {
       const donateObj = donateFromAddressMap[donate.from];
       if (donateObj) {
-        donateObj.totaldonation += Number(donate.money);
+        donateObj.totalAmount += Number(donate.amount);
         donateFromAddressMap[donate.from] = donateObj;
       } else {
         donateFromAddressMap[donate.from] = {
           address: donate.from,
-          totaldonation: Number(donate.money),
+          totalAmount: Number(donate.amount),
         };
       }
     });
 
     const resultsWithRank = Object.values<{
       address: string;
-      totaldonation: number;
+      totalAmount: number;
     }>(donateFromAddressMap)
-      .sort((a, b) => b.totaldonation - a.totaldonation)
+      .sort((a, b) => b.totalAmount - a.totalAmount)
       .map((i, index) => ({ ...i, top: index + 1 }));
 
     return resultsWithRank;
   }
 
-  formateDataFromChainId(data: DonateInfoWithAmount[]) {
-    const chainIdMap = new Map<number, DonateInfoWithAmount[]>();
+  formateDataFromChainId(data: Partial<UpdateDonateDto>[]) {
+    const chainIdMap = new Map<number, Partial<UpdateDonateDto>[]>();
     data.forEach((info) => {
       const chainId = info.chainId;
       if (chainIdMap.get(chainId)) {
@@ -159,9 +157,9 @@ export class DonatesService {
   }
 
   getDonateHistoryWithAmount(
-    donateList: Prisma.DonationCreateInput[],
+    donateList: Partial<UpdateDonateDto>[],
     tokenPrice: OkxResponse[],
-  ): DonateInfoWithAmount[] {
+  ) {
     const donateWithTokenValue = donateList.map((donate) => {
       const info = tokenPrice.find((p) => p.instId === `${donate.erc20}-USDT`);
       let amount = 0;

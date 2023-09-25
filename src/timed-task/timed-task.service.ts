@@ -1,3 +1,4 @@
+import { CreateDonateDto } from './../api/donates/dto/create-donate.dto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
@@ -7,6 +8,29 @@ import config from 'src/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { toLower } from 'lodash';
 import { Prisma } from '@prisma/client';
+import { DonatesService } from 'src/api/donates/donates.service';
+import { HttpService } from '@nestjs/axios';
+
+interface ChainIdsItem {
+  name: string;
+  chain: string;
+  icon: string;
+  rpc: string[];
+  features: any[];
+  faucets: string[];
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  infoURL: string;
+  shortName: string;
+  chainId: number;
+  networkId: number;
+  slip44: number;
+  ens: any;
+  explorers: any[];
+}
 
 @Injectable()
 export class TimedTaskService {
@@ -14,27 +38,48 @@ export class TimedTaskService {
   private providerContracts: {
     [chainId: number]: { provider: ethers.JsonRpcProvider; contract: Contract };
   };
+  private priceList = [];
+  private chainIdList: ChainIdsItem[] = [];
 
   constructor(
     private configService: ConfigService,
     private readonly prismaService: PrismaService,
+    private donateService: DonatesService,
+    private httpService: HttpService,
   ) {
-    const { CONTRACT_MAP, abi, abiUid, RPC_MAP, useUidChainId } = config;
-    const INFURA_APIKEY = this.configService.get('INFURA_APIKEY');
-    this.providerContracts = {};
-    Object.keys(RPC_MAP).forEach((chainId) => {
-      const parsedChainId = parseInt(chainId, 10);
-      if (CONTRACT_MAP[parsedChainId]) {
-        const url = RPC_MAP[parsedChainId] + INFURA_APIKEY;
-        const provider = new ethers.JsonRpcProvider(url);
-        const contract = new ethers.Contract(
-          CONTRACT_MAP[parsedChainId],
-          useUidChainId.includes(parsedChainId) ? abiUid : abi,
-          provider,
-        );
-        this.providerContracts[parsedChainId] = { provider, contract };
-      }
-    });
+    try {
+      const { CONTRACT_MAP, abi, abiUid, RPC_MAP, useUidChainId } = config;
+      const INFURA_APIKEY = this.configService.get('INFURA_APIKEY');
+      this.providerContracts = {};
+      Object.keys(RPC_MAP).forEach((chainId) => {
+        const parsedChainId = parseInt(chainId, 10);
+        if (CONTRACT_MAP[parsedChainId]) {
+          const url = RPC_MAP[parsedChainId] + INFURA_APIKEY;
+          const provider = new ethers.JsonRpcProvider(url);
+          const contract = new ethers.Contract(
+            CONTRACT_MAP[parsedChainId],
+            useUidChainId.includes(parsedChainId) ? abiUid : abi,
+            provider,
+          );
+          this.providerContracts[parsedChainId] = { provider, contract };
+        }
+      });
+
+      this.getChainIdList();
+    } catch (e) {
+      this.logger.error(e.message);
+    }
+  }
+
+  async getChainIdList() {
+    try {
+      const { data = [] } = await this.httpService.axiosRef.get(
+        'https://chainid.network/chains.json',
+      );
+      this.chainIdList = data;
+    } catch (e) {
+      this.logger.error('getChainIdList:', 'error', e.message);
+    }
   }
 
   async getLatestData(chainId: number) {
@@ -44,6 +89,30 @@ export class TimedTaskService {
       take: 1,
     });
     return result[0];
+  }
+
+  async getErc20TokenSymbol(provider, address, chainId) {
+    try {
+      if (parseInt(address, 10) === 0) {
+        if (!!this.chainIdList || this.chainIdList.length === 0) {
+          this.getChainIdList();
+        }
+        const chainInfo = this.chainIdList.find(
+          (item) => item.chainId === parseInt(chainId),
+        );
+        return chainInfo.nativeCurrency?.symbol || '';
+      }
+      const tokenContractABI = ['function symbol() view returns (string)'];
+      const tokenContract = new ethers.Contract(
+        address,
+        tokenContractABI,
+        provider,
+      );
+      const symbol = await tokenContract.symbol();
+      return symbol;
+    } catch (err) {
+      this.logger.error(err.message);
+    }
   }
 
   async getBlockDonateHistory(
@@ -57,14 +126,30 @@ export class TimedTaskService {
     if (transactions.length === 0) {
       return [];
     }
-
     const promiseData = transactions.map(async (item: EventLog) => {
       const block = await provider.getBlock(item.blockNumber);
       const transactionInfo = await provider.getTransaction(
         item.transactionHash,
       );
+      const inputData = contract.interface.decodeFunctionData(
+        ` function donate(
+          address,
+          uint256,
+          address,
+          bytes calldata _message,
+          bytes32[] calldata _merkleProof
+      )`,
+        transactionInfo.data,
+      );
 
-      const [from, to, symbol, amount, msg] = item.args;
+      const token_address = inputData[0];
+      const erc20 = await this.getErc20TokenSymbol(
+        provider,
+        token_address,
+        transactionInfo.chainId,
+      );
+
+      const [from, to, amount, msg] = item.args;
 
       const { UID_CONTRACT_MAP } = config;
       const uid_address = UID_CONTRACT_MAP[chainId];
@@ -94,8 +179,9 @@ export class TimedTaskService {
           (msg.startsWith('0x') ? msg : '0x' + msg) === '0x00'
             ? ''
             : ethers.toUtf8String(msg),
-        erc20: ethers.decodeBytes32String(symbol),
-        uid: uid,
+        erc20,
+        // ethers.decodeBytes32String(symbol)
+        uid,
       };
 
       return newData;
@@ -119,9 +205,16 @@ export class TimedTaskService {
 
     if (data.length > 0) {
       try {
-        await this.prismaService.donation.createMany({ data: data });
+        if (this.priceList.length == 0) {
+          this.priceList = await this.donateService.getTokenPrice();
+        }
+        const dataWithAmount: Partial<CreateDonateDto>[] =
+          this.donateService.getDonateHistoryWithAmount(data, this.priceList);
+        await this.prismaService.donation.createMany({
+          data: dataWithAmount as unknown as Prisma.DonationCreateManyInput[],
+        });
       } catch (e) {
-        console.log(e.message);
+        this.logger.error(e.message);
       }
       this.logger.log(
         `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
@@ -132,6 +225,7 @@ export class TimedTaskService {
       this.logger.log(`${new Date().toString()}: No data to update`);
     }
   }
+
   @Cron('0 */10 * * * *')
   async handleCron() {
     try {
@@ -140,6 +234,32 @@ export class TimedTaskService {
       });
     } catch (e) {
       this.logger.error('update new donate history failed: ', e.message);
+    }
+  }
+
+  @Cron('0 0 * * * *')
+  async calculateDonationValue() {
+    try {
+      this.priceList = await this.donateService.getTokenPrice();
+      const allData = await this.donateService.findDonates({});
+      const allHistoryWithAmount =
+        this.donateService.getDonateHistoryWithAmount(allData, this.priceList);
+      const update: Prisma.DonationUpdateArgs[] = allHistoryWithAmount.map(
+        (item) => {
+          return {
+            where: {
+              id: item.id,
+            },
+            data: {
+              amount: item.amount,
+              price: item.price,
+            },
+          };
+        },
+      );
+      await this.donateService.updateAllDataPrice(update);
+    } catch (e) {
+      this.logger.error('calculate donation value failed: ', e.message);
     }
   }
 }

@@ -9,15 +9,17 @@ import LoggerMiddleware from './logger/logger.middleware';
 import { TimedTaskModule } from './timed-task/timed-task.module';
 import { DonatesModule } from './api/donates/donates.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TestModule,
     ScheduleModule.forRoot(),
-    TimedTaskModule,
     DonatesModule,
+    TimedTaskModule,
     PrismaModule,
+    HttpModule,
   ],
   controllers: [AppController],
   providers: [AppService],

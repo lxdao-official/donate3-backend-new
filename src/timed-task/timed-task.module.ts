@@ -2,16 +2,21 @@ import { Module } from '@nestjs/common';
 import { TimedTaskService } from './timed-task.service';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { DonatesModule } from 'src/api/donates/donates.module';
+import { DonatesService } from 'src/api/donates/donates.service';
+import { HttpModule, HttpService } from '@nestjs/axios';
 
 const getChainId = (): number => {
   return 137;
 };
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, HttpModule],
   providers: [
     TimedTaskService,
     ConfigService,
+    DonatesService,
+    // HttpService,
     {
       provide: 'CHAIN_ID_137',
       useFactory: getChainId,
