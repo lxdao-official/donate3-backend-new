@@ -93,7 +93,7 @@ export class TimedTaskService {
 
   async getErc20TokenSymbol(provider, address, chainId) {
     try {
-      if (parseInt(address, 10) === 0) {
+      if (parseInt(address) === 0) {
         if (!!this.chainIdList || this.chainIdList.length === 0) {
           this.getChainIdList();
         }
@@ -156,6 +156,7 @@ export class TimedTaskService {
       let uid = '';
       if (uid_address) {
         const logs = await provider.getLogs({ blockHash: item.blockHash });
+
         const filterLogs = logs.find(
           (log) =>
             log.transactionHash === item.transactionHash &&
