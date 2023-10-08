@@ -8,6 +8,8 @@ import axios from 'axios';
 import { DonationRankingByUsdtDto } from './dto/donation-ranking-by-usdt.dto.ts';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import config from 'src/config';
 
 interface OkxResponse {
   instId: string;
@@ -20,7 +22,10 @@ interface OkxResponse {
 export class DonatesService {
   private readonly logger = new Logger(DonatesService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private configService: ConfigService,
+  ) {}
 
   async findDonatesList(queryInfo: QueryDonateDto) {
     const {
@@ -91,11 +96,23 @@ export class DonatesService {
   }
 
   async getDonationRanking(address: string, chainId: number) {
-    const result = await this.prismaService.donation.findMany({
-      where: {
-        to: address,
-        chainId: Number(chainId),
+    const { TEST_CHAIN_ID } = config;
+    const where: Prisma.DonationWhereInput = {
+      to: address,
+      chainId: {
+        not: {
+          in:
+            this.configService.get('NODE_ENV') !== 'development'
+              ? TEST_CHAIN_ID
+              : [],
+        },
       },
+    };
+    if (chainId) {
+      (where.chainId as Prisma.IntFilter<'Donation'>).in = [chainId];
+    }
+    const result = await this.prismaService.donation.findMany({
+      where,
     });
 
     const donateFromAddressMap = {};
@@ -107,6 +124,7 @@ export class DonatesService {
       } else {
         donateFromAddressMap[donate.from] = {
           address: donate.from,
+          chainId: donate.chainId,
           totalAmount: Number(donate.amount),
         };
       }

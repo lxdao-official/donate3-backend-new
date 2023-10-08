@@ -49,7 +49,7 @@ export class DonatesController {
     name: 'chainId',
     type: 'number',
     description: 'chainId',
-    required: true,
+    required: false,
   })
   async getDonationRanking(@Query() queryInfo: DonationRankingDto) {
     const { address, chainId } = queryInfo;

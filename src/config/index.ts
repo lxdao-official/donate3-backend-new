@@ -32,6 +32,8 @@ const UID_CONTRACT_MAP = {
 
 const useUidChainId = [420];
 
+const TEST_CHAIN_ID = [11155111, 5, 80001, 420];
+
 export default {
   CONTRACT_MAP,
   abi,
@@ -39,4 +41,5 @@ export default {
   abiUid,
   UID_CONTRACT_MAP,
   useUidChainId,
+  TEST_CHAIN_ID,
 };
