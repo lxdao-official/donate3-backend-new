@@ -245,6 +245,7 @@ export class TimedTaskService {
       const allData = await this.donateService.findDonates({});
       const allHistoryWithAmount =
         this.donateService.getDonateHistoryWithAmount(allData, this.priceList);
+      console.log('allHistoryWithAmount', allHistoryWithAmount.length);
       const update: Prisma.DonationUpdateArgs[] = allHistoryWithAmount.map(
         (item) => {
           return {
@@ -259,6 +260,7 @@ export class TimedTaskService {
         },
       );
       await this.donateService.updateAllDataPrice(update);
+      this.logger.log('update price: successful');
     } catch (e) {
       this.logger.error('calculate donation value failed: ', e.message);
     }

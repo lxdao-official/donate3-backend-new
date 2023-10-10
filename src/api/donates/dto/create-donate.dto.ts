@@ -10,6 +10,6 @@ export class CreateDonateDto {
   message?: string;
   erc20: string;
   uid?: string;
-  amount?: number;
+  amount?: string;
   price?: string;
 }

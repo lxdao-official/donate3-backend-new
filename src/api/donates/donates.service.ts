@@ -121,10 +121,13 @@ export class DonatesService {
       if (donateObj) {
         donateObj.totalAmount += Number(donate.amount);
         donateFromAddressMap[donate.from] = donateObj;
+        if (!donateObj.chainIds.includes(donate.chainId)) {
+          donateObj.chainIds.push(donate.chainId);
+        }
       } else {
         donateFromAddressMap[donate.from] = {
           address: donate.from,
-          chainId: donate.chainId,
+          chainIds: [donate.chainId],
           totalAmount: Number(donate.amount),
         };
       }
@@ -186,7 +189,7 @@ export class DonatesService {
       }
       return {
         ...donate,
-        amount,
+        amount: String(amount),
         price: info?.markPx || '0',
       };
     });
