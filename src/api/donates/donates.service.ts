@@ -109,7 +109,7 @@ export class DonatesService {
       },
     };
     if (chainId) {
-      (where.chainId as Prisma.IntFilter<'Donation'>).in = [chainId];
+      (where.chainId as Prisma.IntFilter<'Donation'>).in = [+chainId];
     }
     const result = await this.prismaService.donation.findMany({
       where,
