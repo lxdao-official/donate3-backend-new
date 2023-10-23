@@ -37,12 +37,14 @@ export class DonatesService {
       uid,
       page = 0,
       size = 10,
-      orderBy = {},
+      orderBy = [],
     } = queryInfo;
     const filterInfo: Prisma.DonationWhereInput = {
       from: from || { not: { in: [''] } },
-      uid: uid || { not: { in: [''] } },
     };
+    if (uid) {
+      filterInfo.uid = uid;
+    }
     if (tos.length > 0) {
       filterInfo.to = { in: tos };
     }
