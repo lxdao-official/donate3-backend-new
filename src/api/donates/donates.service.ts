@@ -202,7 +202,7 @@ export class DonatesService {
       const ChainIdAmount = { token: '', totalMoney: 0, price: 0, num: 0 };
       donateList.forEach((donate) => {
         ChainIdAmount.token = donate.erc20;
-        ChainIdAmount.totalMoney += donate.amount;
+        ChainIdAmount.totalMoney += Number(donate.amount);
         ChainIdAmount.price = +donate.price;
         ChainIdAmount.num += +ethers.formatEther(donate.money);
       });
