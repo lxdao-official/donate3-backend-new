@@ -119,7 +119,7 @@ export class TimedTaskService {
       );
       const symbol = await tokenContract.symbol();
       const decimals = await tokenContract.decimals();
-      return { symbol, decimals };
+      return { symbol, decimals: Number(decimals) };
     } catch (err) {
       this.logger.error(err.message);
     }
@@ -220,7 +220,6 @@ export class TimedTaskService {
         }
         const dataWithAmount: Partial<CreateDonateDto>[] =
           this.donateService.getDonateHistoryWithAmount(data, this.priceList);
-
         await this.prismaService.donation.createMany({
           data: dataWithAmount as unknown as Prisma.DonationCreateManyInput[],
         });
