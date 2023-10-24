@@ -237,7 +237,7 @@ export class TimedTaskService {
     }
   }
 
-  @Cron('0 */2 * * * *')
+  @Cron('0 */10 * * * *')
   async handleCron() {
     try {
       Object.keys(this.providerContracts).forEach((chainId) => {
