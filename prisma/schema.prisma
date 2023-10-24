@@ -23,4 +23,7 @@ model Donation {
   message         String?
   erc20           String
   uid             String?
+  amount          String?
+  price           String?
+  decimals        Int?
 }

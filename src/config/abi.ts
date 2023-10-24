@@ -1,6 +1,10 @@
 const abi = [
   {
-    inputs: [{ internalType: 'string', name: '_tokenSymbol', type: 'string' }],
+    inputs: [
+      { internalType: 'string', name: '_tokenSymbol', type: 'string' },
+      { internalType: 'address', name: '_attesterAddress', type: 'address' },
+      { internalType: 'bytes32', name: '_schemaID', type: 'bytes32' },
+    ],
     stateMutability: 'nonpayable',
     type: 'constructor',
   },
@@ -83,30 +87,14 @@ const abi = [
         name: 'from',
         type: 'address',
       },
-      {
-        indexed: false,
-        internalType: 'address',
-        name: 'to',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'bytes32',
-        name: 'symbol',
-        type: 'bytes32',
-      },
+      { indexed: false, internalType: 'address', name: 'to', type: 'address' },
       {
         indexed: false,
         internalType: 'uint256',
         name: 'amount',
         type: 'uint256',
       },
-      {
-        indexed: false,
-        internalType: 'bytes',
-        name: 'msg',
-        type: 'bytes',
-      },
+      { indexed: false, internalType: 'bytes', name: 'msg', type: 'bytes' },
     ],
     name: 'donateRecord',
     type: 'event',
@@ -126,12 +114,7 @@ const abi = [
         name: 'from',
         type: 'address',
       },
-      {
-        indexed: false,
-        internalType: 'address',
-        name: 'to',
-        type: 'address',
-      },
+      { indexed: false, internalType: 'address', name: 'to', type: 'address' },
       {
         indexed: false,
         internalType: 'uint256',
@@ -146,37 +129,12 @@ const abi = [
   {
     inputs: [
       { internalType: 'address', name: '_token', type: 'address' },
-      { internalType: 'string', name: '_tokenSymbol', type: 'string' },
-      {
-        internalType: 'uint256',
-        name: '_amountInDesired',
-        type: 'uint256',
-      },
+      { internalType: 'uint256', name: '_amountInDesired', type: 'uint256' },
       { internalType: 'address', name: '_to', type: 'address' },
       { internalType: 'bytes', name: '_message', type: 'bytes' },
-      {
-        internalType: 'bytes32[]',
-        name: '_merkleProof',
-        type: 'bytes32[]',
-      },
+      { internalType: 'bytes32[]', name: '_merkleProof', type: 'bytes32[]' },
     ],
-    name: 'donateERC20',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
-      { internalType: 'address', name: 'to', type: 'address' },
-      { internalType: 'bytes', name: 'message', type: 'bytes' },
-      {
-        internalType: 'bytes32[]',
-        name: '_merkleProof',
-        type: 'bytes32[]',
-      },
-    ],
-    name: 'donateToken',
+    name: 'donate',
     outputs: [],
     stateMutability: 'payable',
     type: 'function',
@@ -259,5 +217,4 @@ const abi = [
   },
   { stateMutability: 'payable', type: 'receive' },
 ];
-
 export default abi;

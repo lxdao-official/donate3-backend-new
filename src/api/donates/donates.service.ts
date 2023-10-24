@@ -8,6 +8,8 @@ import axios from 'axios';
 import { DonationRankingByUsdtDto } from './dto/donation-ranking-by-usdt.dto.ts';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import config from 'src/config';
 
 interface OkxResponse {
   instId: string;
@@ -16,16 +18,14 @@ interface OkxResponse {
   ts: string;
 }
 
-export interface DonateInfoWithAmount extends Prisma.DonationCreateInput {
-  amount: number;
-  price: string;
-}
-
 @Injectable()
 export class DonatesService {
   private readonly logger = new Logger(DonatesService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private configService: ConfigService,
+  ) {}
 
   async findDonatesList(queryInfo: QueryDonateDto) {
     const {
@@ -37,12 +37,14 @@ export class DonatesService {
       uid,
       page = 0,
       size = 10,
-      orderBy = {},
+      orderBy = [],
     } = queryInfo;
     const filterInfo: Prisma.DonationWhereInput = {
-      from: from || '',
-      uid: uid || '',
+      from: from || { not: { in: [''] } },
     };
+    if (uid) {
+      filterInfo.uid = uid;
+    }
     if (tos.length > 0) {
       filterInfo.to = { in: tos };
     }
@@ -84,8 +86,11 @@ export class DonatesService {
     return `This action returns a #${id} donate`;
   }
 
-  update(id: number, updateDonateDto: UpdateDonateDto) {
-    return `This action updates a #${id} donate`;
+  async updateAllDataPrice(updateDonateDto: Prisma.DonationUpdateArgs[]) {
+    const updateQueue = updateDonateDto.map((item) => {
+      return this.prismaService.donation.update(item);
+    });
+    await this.prismaService.$transaction(updateQueue);
   }
 
   remove(id: number) {
@@ -93,39 +98,55 @@ export class DonatesService {
   }
 
   async getDonationRanking(address: string, chainId: number) {
-    const result = await this.prismaService.donation.findMany({
-      where: {
-        to: address,
-        chainId: Number(chainId),
+    const { TEST_CHAIN_ID } = config;
+    const where: Prisma.DonationWhereInput = {
+      to: address,
+      chainId: {
+        not: {
+          in:
+            this.configService.get('NODE_ENV') !== 'development'
+              ? TEST_CHAIN_ID
+              : [],
+        },
       },
+    };
+    if (chainId) {
+      (where.chainId as Prisma.IntFilter<'Donation'>).in = [+chainId];
+    }
+    const result = await this.prismaService.donation.findMany({
+      where,
     });
 
     const donateFromAddressMap = {};
     result.forEach((donate) => {
       const donateObj = donateFromAddressMap[donate.from];
       if (donateObj) {
-        donateObj.totaldonation += Number(donate.money);
+        donateObj.totalAmount += Number(donate.amount);
         donateFromAddressMap[donate.from] = donateObj;
+        if (!donateObj.chainIds.includes(donate.chainId)) {
+          donateObj.chainIds.push(donate.chainId);
+        }
       } else {
         donateFromAddressMap[donate.from] = {
           address: donate.from,
-          totaldonation: Number(donate.money),
+          chainIds: [donate.chainId],
+          totalAmount: Number(donate.amount),
         };
       }
     });
 
     const resultsWithRank = Object.values<{
       address: string;
-      totaldonation: number;
+      totalAmount: number;
     }>(donateFromAddressMap)
-      .sort((a, b) => b.totaldonation - a.totaldonation)
+      .sort((a, b) => b.totalAmount - a.totalAmount)
       .map((i, index) => ({ ...i, top: index + 1 }));
 
     return resultsWithRank;
   }
 
-  formateDataFromChainId(data: DonateInfoWithAmount[]) {
-    const chainIdMap = new Map<number, DonateInfoWithAmount[]>();
+  formateDataFromChainId(data: Partial<UpdateDonateDto>[]) {
+    const chainIdMap = new Map<number, Partial<UpdateDonateDto>[]>();
     data.forEach((info) => {
       const chainId = info.chainId;
       if (chainIdMap.get(chainId)) {
@@ -159,18 +180,21 @@ export class DonatesService {
   }
 
   getDonateHistoryWithAmount(
-    donateList: Prisma.DonationCreateInput[],
+    donateList: Partial<UpdateDonateDto>[],
     tokenPrice: OkxResponse[],
-  ): DonateInfoWithAmount[] {
+  ) {
     const donateWithTokenValue = donateList.map((donate) => {
       const info = tokenPrice.find((p) => p.instId === `${donate.erc20}-USDT`);
       let amount = 0;
       if (info) {
-        amount = multiply(+info.markPx, +ethers.formatEther(donate.money));
+        amount = multiply(
+          +info.markPx,
+          Number(ethers.formatUnits(donate.money, donate.decimals || 18)),
+        );
       }
       return {
         ...donate,
-        amount,
+        amount: String(amount),
         price: info?.markPx || '0',
       };
     });
@@ -183,9 +207,11 @@ export class DonatesService {
       const ChainIdAmount = { token: '', totalMoney: 0, price: 0, num: 0 };
       donateList.forEach((donate) => {
         ChainIdAmount.token = donate.erc20;
-        ChainIdAmount.totalMoney += donate.amount;
+        ChainIdAmount.totalMoney += Number(donate.amount);
         ChainIdAmount.price = +donate.price;
-        ChainIdAmount.num += +ethers.formatEther(donate.money);
+        ChainIdAmount.num += Number(
+          ethers.formatUnits(donate.money, donate.decimals || 18),
+        );
       });
       resultTotalMoney[chainId] = ChainIdAmount;
     });
@@ -225,7 +251,7 @@ export class DonatesService {
   ): Promise<DonationRankingByUsdtDto[]> {
     const donateList = await this.prismaService.donation.findMany({
       where: { to: toAddress },
-      select: { from: true, money: true, erc20: true },
+      select: { from: true, money: true, erc20: true, decimals: true },
     });
 
     const tokenPriceList = await this.getTokenPrice();
@@ -236,7 +262,10 @@ export class DonatesService {
         (p) => p.instId === `${donate.erc20}-USDT`,
       );
       const price = tokenPrice?.markPx || '0';
-      const amountInUSDT = multiply(+price, +ethers.formatEther(donate.money));
+      const amountInUSDT = multiply(
+        +price,
+        Number(ethers.formatUnits(donate.money, donate.decimals || 18)),
+      );
 
       if (addressToTotalDonationMap.has(donate.from)) {
         addressToTotalDonationMap.set(

@@ -5,6 +5,5 @@ export class DonationRankingDto {
   @IsNotEmpty({ message: 'address is required' })
   address: string;
 
-  @IsNotEmpty({ message: 'chainId is required' })
   chainId: number;
 }
