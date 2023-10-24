@@ -12,4 +12,5 @@ export class CreateDonateDto {
   uid?: string;
   amount?: string;
   price?: string;
+  decimals?: number;
 }

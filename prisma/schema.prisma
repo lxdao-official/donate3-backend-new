@@ -25,4 +25,5 @@ model Donation {
   uid             String?
   amount          String?
   price           String?
+  decimals        Int?
 }

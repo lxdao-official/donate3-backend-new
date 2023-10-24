@@ -39,6 +39,12 @@ const useUidChainId = [420, 11155111, 1, 59144, 42161, 10];
 
 const TEST_CHAIN_ID = [11155111, 5, 80001, 420];
 
+const DECIMALS_MAP = {
+  USDT: 6,
+  USDC: 6,
+  WETH: 18,
+};
+
 export default {
   CONTRACT_MAP,
   abi,
@@ -47,4 +53,5 @@ export default {
   UID_CONTRACT_MAP,
   useUidChainId,
   TEST_CHAIN_ID,
+  DECIMALS_MAP,
 };

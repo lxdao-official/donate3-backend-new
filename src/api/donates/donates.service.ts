@@ -187,7 +187,10 @@ export class DonatesService {
       const info = tokenPrice.find((p) => p.instId === `${donate.erc20}-USDT`);
       let amount = 0;
       if (info) {
-        amount = multiply(+info.markPx, +ethers.formatEther(donate.money));
+        amount = multiply(
+          +info.markPx,
+          Number(ethers.formatUnits(donate.money, donate.decimals || 18)),
+        );
       }
       return {
         ...donate,
@@ -206,7 +209,9 @@ export class DonatesService {
         ChainIdAmount.token = donate.erc20;
         ChainIdAmount.totalMoney += Number(donate.amount);
         ChainIdAmount.price = +donate.price;
-        ChainIdAmount.num += +ethers.formatEther(donate.money);
+        ChainIdAmount.num += Number(
+          ethers.formatUnits(donate.money, donate.decimals || 18),
+        );
       });
       resultTotalMoney[chainId] = ChainIdAmount;
     });
@@ -246,7 +251,7 @@ export class DonatesService {
   ): Promise<DonationRankingByUsdtDto[]> {
     const donateList = await this.prismaService.donation.findMany({
       where: { to: toAddress },
-      select: { from: true, money: true, erc20: true },
+      select: { from: true, money: true, erc20: true, decimals: true },
     });
 
     const tokenPriceList = await this.getTokenPrice();
@@ -257,7 +262,10 @@ export class DonatesService {
         (p) => p.instId === `${donate.erc20}-USDT`,
       );
       const price = tokenPrice?.markPx || '0';
-      const amountInUSDT = multiply(+price, +ethers.formatEther(donate.money));
+      const amountInUSDT = multiply(
+        +price,
+        Number(ethers.formatUnits(donate.money, donate.decimals || 18)),
+      );
 
       if (addressToTotalDonationMap.has(donate.from)) {
         addressToTotalDonationMap.set(

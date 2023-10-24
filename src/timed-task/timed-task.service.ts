@@ -91,7 +91,7 @@ export class TimedTaskService {
     return result[0];
   }
 
-  async getErc20TokenSymbol(provider, address, chainId) {
+  async getErc20TokenInfo(provider, address, chainId) {
     try {
       if (parseInt(address) === 0) {
         if (!!this.chainIdList || this.chainIdList.length === 0) {
@@ -100,16 +100,26 @@ export class TimedTaskService {
         const chainInfo = this.chainIdList.find(
           (item) => item.chainId === parseInt(chainId),
         );
-        return chainInfo.nativeCurrency?.symbol || '';
+        return { symbol: chainInfo.nativeCurrency?.symbol || '', decimals: 18 };
       }
-      const tokenContractABI = ['function symbol() view returns (string)'];
+      const tokenContractABI = [
+        'function symbol() view returns (string)',
+        {
+          constant: true,
+          inputs: [],
+          name: 'decimals',
+          outputs: [{ name: '', type: 'uint8' }],
+          type: 'function',
+        },
+      ];
       const tokenContract = new ethers.Contract(
         address,
         tokenContractABI,
         provider,
       );
       const symbol = await tokenContract.symbol();
-      return symbol;
+      const decimals = await tokenContract.decimals();
+      return { symbol, decimals };
     } catch (err) {
       this.logger.error(err.message);
     }
@@ -143,7 +153,7 @@ export class TimedTaskService {
       );
 
       const token_address = inputData[0];
-      const erc20 = await this.getErc20TokenSymbol(
+      const { symbol, decimals } = await this.getErc20TokenInfo(
         provider,
         token_address,
         transactionInfo.chainId,
@@ -179,9 +189,9 @@ export class TimedTaskService {
           (msg.startsWith('0x') ? msg : '0x' + msg) === '0x00'
             ? ''
             : ethers.toUtf8String(msg),
-        erc20,
-        // ethers.decodeBytes32String(symbol)
+        erc20: symbol,
         uid,
+        decimals,
       };
 
       return newData;
@@ -210,6 +220,7 @@ export class TimedTaskService {
         }
         const dataWithAmount: Partial<CreateDonateDto>[] =
           this.donateService.getDonateHistoryWithAmount(data, this.priceList);
+
         await this.prismaService.donation.createMany({
           data: dataWithAmount as unknown as Prisma.DonationCreateManyInput[],
         });
@@ -226,7 +237,7 @@ export class TimedTaskService {
     }
   }
 
-  @Cron('0 */10 * * * *')
+  @Cron('0 */2 * * * *')
   async handleCron() {
     try {
       Object.keys(this.providerContracts).forEach((chainId) => {
