@@ -58,7 +58,7 @@ export class TimedTaskService {
           const provider = new ethers.JsonRpcProvider(url);
           const contract = new ethers.Contract(
             CONTRACT_MAP[parsedChainId],
-            useUidChainId.includes(parsedChainId) ? abiUid : abi,
+            abi,
             provider,
           );
           this.providerContracts[parsedChainId] = { provider, contract };
@@ -156,7 +156,6 @@ export class TimedTaskService {
       let uid = '';
       if (uid_address) {
         const logs = await provider.getLogs({ blockHash: item.blockHash });
-
         const filterLogs = logs.find(
           (log) =>
             log.transactionHash === item.transactionHash &&
@@ -245,7 +244,6 @@ export class TimedTaskService {
       const allData = await this.donateService.findDonates({});
       const allHistoryWithAmount =
         this.donateService.getDonateHistoryWithAmount(allData, this.priceList);
-      console.log('allHistoryWithAmount', allHistoryWithAmount.length);
       const update: Prisma.DonationUpdateArgs[] = allHistoryWithAmount.map(
         (item) => {
           return {
