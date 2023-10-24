@@ -15,27 +15,27 @@ const CONTRACT_MAP = {
 
 const RPC_MAP = {
   11155111: `https://sepolia.infura.io/v3/`, //sepolia
-  // 5: `https://goerli.infura.io/v3/`,
-  // 80001: `https://polygon-mumbai.infura.io/v3/`,
-  // 137: 'https://polygon-mainnet.infura.io/v3/',
-  // 59144: `https://linea-mainnet.infura.io/v3/`, //linea
-  // 42161: `https://arbitrum-mainnet.infura.io/v3/`, //arbitrum
+  5: `https://goerli.infura.io/v3/`,
+  80001: `https://polygon-mumbai.infura.io/v3/`,
+  137: 'https://polygon-mainnet.infura.io/v3/',
+  59144: `https://linea-mainnet.infura.io/v3/`, //linea
+  42161: `https://arbitrum-mainnet.infura.io/v3/`, //arbitrum
   10: `https://optimism-mainnet.infura.io/v3/`, //optimism
-  // 1: `https://mainnet.infura.io/v3/`, //eth mainnet
-  // 420: `https://optimism-goerli.infura.io/v3/`,
+  1: `https://mainnet.infura.io/v3/`, //eth mainnet
+  420: `https://optimism-goerli.infura.io/v3/`,
 };
 
+// see https://docs.attest.sh/docs/quick--start/contracts#base
 const UID_CONTRACT_MAP = {
   11155111: '0xc2679fbd37d54388ce493f1db75320d236e1815e',
   10: '0x4200000000000000000000000000000000000021',
   420: '0x4200000000000000000000000000000000000021',
-  // 1: '0xa753c59E7aF6d7331ddF57Db7954bB234e470023',
-  // 59144: '0xD880809f80A62B6779D5015197FF6867175A471f',
-  // 42161: '0x3a42DDc676F6854730151750f3dBD0ebFE3c6CD3',
-  // 5: ' 0x79a2E9cA13dC238774F8a11550331d1A6659E3F',
+  1: '0xA1207F3BBa224E2c9c3c6D5aF63D0eb1582Ce587',
+  59144: '0xaEF4103A04090071165F78D45D83A0C0782c2B2a',
+  42161: '0xbD75f629A22Dc1ceD33dDA0b68c546A1c035c458',
 };
 
-const useUidChainId = [420, 11155111, 1, 59144, 42161, 10, 5];
+const useUidChainId = [420, 11155111, 1, 59144, 42161, 10];
 
 const TEST_CHAIN_ID = [11155111, 5, 80001, 420];
 
