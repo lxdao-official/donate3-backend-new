@@ -22,9 +22,10 @@ export class SettingsService {
       setting: message,
       // ...info,
     };
-    const oldInfo = await this.prismaService.setting.findFirst({
-      where: { address },
-    });
+    return 1;
+    // const oldInfo = await this.prismaService.setting.findFirst({
+    //   where: { address },
+    // });
     // let result = {};
     // if (oldInfo) {
     //   result = await this.prismaService.setting.update({
