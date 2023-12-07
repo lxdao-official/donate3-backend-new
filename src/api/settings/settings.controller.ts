@@ -1,8 +1,9 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { CreateSettingDto } from './dto/create-setting.dto';
-import { ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
 @Controller('settings')
+@ApiTags('settings')
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 

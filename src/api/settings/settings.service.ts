@@ -20,7 +20,7 @@ export class SettingsService {
     const data: Prisma.SettingCreateInput = {
       address,
       setting: message,
-      ...info,
+      // ...info,
     };
     const oldInfo = await this.prismaService.setting.findFirst({
       where: { address },
@@ -36,7 +36,7 @@ export class SettingsService {
         data,
       });
     }
-    return result;
+    return { result, info, data };
   }
 
   async findSetting(address: string) {
