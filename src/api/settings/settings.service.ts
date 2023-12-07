@@ -20,25 +20,23 @@ export class SettingsService {
     const data: Prisma.SettingCreateInput = {
       address,
       setting: message,
-      // ...info,
+      ...info,
     };
-    const result = await this.prismaService.setting.findMany();
+    const oldInfo = await this.prismaService.setting.findFirst({
+      where: { address },
+    });
+    let result = {};
+    if (oldInfo) {
+      result = await this.prismaService.setting.update({
+        where: { id: oldInfo.id },
+        data,
+      });
+    } else {
+      result = await this.prismaService.setting.create({
+        data,
+      });
+    }
     return result;
-    // const oldInfo = await this.prismaService.setting.findFirst({
-    //   where: { address },
-    // });
-    // let result = {};
-    // if (oldInfo) {
-    //   result = await this.prismaService.setting.update({
-    //     where: { address },
-    //     data,
-    //   });
-    // } else {
-    //   result = await this.prismaService.setting.create({
-    //     data,
-    //   });
-    // }
-    return { info, data };
   }
 
   async findSetting(address: string) {
