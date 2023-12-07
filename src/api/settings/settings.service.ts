@@ -25,18 +25,18 @@ export class SettingsService {
     const oldInfo = await this.prismaService.setting.findFirst({
       where: { address },
     });
-    let result = {};
-    if (oldInfo) {
-      result = await this.prismaService.setting.update({
-        where: { address },
-        data,
-      });
-    } else {
-      result = await this.prismaService.setting.create({
-        data,
-      });
-    }
-    return { result, info, data };
+    // let result = {};
+    // if (oldInfo) {
+    //   result = await this.prismaService.setting.update({
+    //     where: { address },
+    //     data,
+    //   });
+    // } else {
+    //   result = await this.prismaService.setting.create({
+    //     data,
+    //   });
+    // }
+    return { info, data };
   }
 
   async findSetting(address: string) {
