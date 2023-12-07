@@ -41,11 +41,10 @@ export class SettingsService {
 
   async findSetting(address: string) {
     try {
-      // const setting = await this.prismaService.setting.findFirst({
-      //   where: { address },
-      // });
-      // return setting;
-      return 11;
+      const setting = await this.prismaService.setting.findFirst({
+        where: { address },
+      });
+      return setting;
     } catch (err) {
       return err;
     }
