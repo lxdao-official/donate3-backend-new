@@ -27,3 +27,12 @@ model Donation {
   price           String?
   decimals        Int?
 }
+
+model Setting{
+  id Int @id @default(autoincrement())
+  address String @unique
+  name String
+  description String
+  telegram String
+  color String
+}

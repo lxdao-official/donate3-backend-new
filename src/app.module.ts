@@ -10,6 +10,7 @@ import { TimedTaskModule } from './timed-task/timed-task.module';
 import { DonatesModule } from './api/donates/donates.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HttpModule } from '@nestjs/axios';
+import { SettingsModule } from './api/settings/settings.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HttpModule } from '@nestjs/axios';
     TimedTaskModule,
     PrismaModule,
     HttpModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
