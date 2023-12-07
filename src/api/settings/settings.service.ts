@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 @Injectable()
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name);
-  constructor(private prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
   async create(createSettingDto: CreateSettingDto) {
     const { message, signature, address } = createSettingDto;
 
