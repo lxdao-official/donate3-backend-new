@@ -31,8 +31,12 @@ model Donation {
 model Setting{
   id Int @id @default(autoincrement())
   address String @unique
-  name String
-  description String
-  telegram String
-  color String
+  setting String
+  type Int?
+  color String?
+  name String?
+  avatar String?
+  description String?
+  twitter String?
+  telegram String?
 }
