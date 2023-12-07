@@ -17,7 +17,7 @@ export class SettingsService {
 
     const info = JSON.parse(message);
 
-    const setting = await this.prismaService.setting.findUnique({
+    const setting = await this.prismaService.setting.findFirst({
       where: { address },
     });
     let result = {};
@@ -38,7 +38,7 @@ export class SettingsService {
   }
 
   async findSetting(address: string) {
-    const setting = await this.prismaService.setting.findUnique({
+    const setting = await this.prismaService.setting.findFirst({
       where: { address },
     });
     return setting;
