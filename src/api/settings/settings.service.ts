@@ -22,7 +22,8 @@ export class SettingsService {
       setting: message,
       // ...info,
     };
-    return 1;
+    const result = await this.prismaService.donation.findMany();
+    return result;
     // const oldInfo = await this.prismaService.setting.findFirst({
     //   where: { address },
     // });
