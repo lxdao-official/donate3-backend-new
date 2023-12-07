@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Donation {
@@ -17,7 +17,7 @@ model Donation {
   blockNumber     Int
   blockHash       String
   transactionHash String
-  money           String  
+  money           String
   timestamp       String
   chainId         Int
   message         String?
@@ -28,15 +28,15 @@ model Donation {
   decimals        Int?
 }
 
-model Setting{
-  id Int @id @default(autoincrement())
-  address String @unique
-  setting String
-  type Int?
-  color String?
-  name String?
-  avatar String?
+model Setting {
+  id          Int     @id @default(autoincrement())
+  address     String  @unique
+  setting     String
+  type        Int?
+  color       String?
+  name        String?
+  avatar      String?
   description String?
-  twitter String?
-  telegram String?
+  twitter     String?
+  telegram    String?
 }
