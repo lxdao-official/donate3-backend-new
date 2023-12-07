@@ -30,8 +30,12 @@ export class DonatesController {
   })
   @ApiBody({ type: QueryDonateDto })
   async findDonatesFromAddress(@Body() queryInfo: QueryDonateDto) {
-    const data = await this.donatesService.findDonatesList(queryInfo);
-    return data;
+    try {
+      const data = await this.donatesService.findDonatesList(queryInfo);
+      return data;
+    } catch (err) {
+      return err;
+    }
   }
 
   @Get('ranking')

@@ -1,12 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Donate` table. If the table is not empty, all the data it contains will be lost.
-
-*/
--- DropTable
-DROP TABLE "Donate";
-
 -- CreateTable
 CREATE TABLE "Donation" (
     "id" SERIAL NOT NULL,
@@ -21,6 +12,25 @@ CREATE TABLE "Donation" (
     "message" TEXT,
     "erc20" TEXT NOT NULL,
     "uid" TEXT,
+    "amount" TEXT,
+    "price" TEXT,
+    "decimals" INTEGER,
 
     CONSTRAINT "Donation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Setting" (
+    "id" SERIAL NOT NULL,
+    "address" TEXT NOT NULL,
+    "setting" TEXT NOT NULL,
+    "type" INTEGER,
+    "color" TEXT,
+    "name" TEXT,
+    "avatar" TEXT,
+    "description" TEXT,
+    "twitter" TEXT,
+    "telegram" TEXT,
+
+    CONSTRAINT "Setting_pkey" PRIMARY KEY ("id")
 );
