@@ -28,9 +28,9 @@ model Donation {
   decimals        Int?
 }
 
-model Setting {
+model Settings {
   id          Int     @id @default(autoincrement())
-  address     String  
+  address     String  @unique
   setting     String
   type        Int?
   color       String?

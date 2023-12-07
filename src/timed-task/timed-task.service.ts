@@ -149,14 +149,14 @@ export class TimedTaskService {
           bytes calldata _message,
           bytes32[] calldata _merkleProof
       )`,
-        transactionInfo.data,
+        transactionInfo?.data,
       );
 
       const token_address = inputData[0];
       const { symbol, decimals } = await this.getErc20TokenInfo(
         provider,
         token_address,
-        transactionInfo.chainId,
+        transactionInfo?.chainId,
       );
 
       const [from, to, amount, msg] = item.args;
@@ -184,7 +184,7 @@ export class TimedTaskService {
         money: String(amount),
         transactionHash: item.transactionHash,
         timestamp: (block.timestamp * 1000).toString(),
-        chainId: Number(transactionInfo.chainId),
+        chainId: Number(transactionInfo?.chainId),
         message:
           (msg.startsWith('0x') ? msg : '0x' + msg) === '0x00'
             ? ''

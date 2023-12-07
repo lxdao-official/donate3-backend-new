@@ -17,22 +17,22 @@ export class SettingsService {
       return { message: 'Address check failure' };
 
     const info = JSON.parse(message);
-    const data: Prisma.SettingCreateInput = {
+    const data: Prisma.SettingsCreateInput = {
       address,
       setting: message,
       ...info,
     };
-    const oldInfo = await this.prismaService.setting.findFirst({
+    const oldInfo = await this.prismaService.settings.findFirst({
       where: { address },
     });
     let result = {};
     if (oldInfo) {
-      result = await this.prismaService.setting.update({
+      result = await this.prismaService.settings.update({
         where: { id: oldInfo.id },
         data,
       });
     } else {
-      result = await this.prismaService.setting.create({
+      result = await this.prismaService.settings.create({
         data,
       });
     }
@@ -41,7 +41,7 @@ export class SettingsService {
 
   async findSetting(address: string) {
     try {
-      const setting = await this.prismaService.setting.findFirst({
+      const setting = await this.prismaService.settings.findFirst({
         where: { address },
       });
       return setting;
