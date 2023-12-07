@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateSettingDto } from './dto/create-setting.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ethers } from 'ethers';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SettingsService {
@@ -16,31 +17,36 @@ export class SettingsService {
       return { message: 'Address check failure' };
 
     const info = JSON.parse(message);
-
-    const setting = await this.prismaService.setting.findFirst({
+    const data: Prisma.SettingCreateInput = {
+      address,
+      setting: message,
+      ...info,
+    };
+    const oldInfo = await this.prismaService.setting.findFirst({
       where: { address },
     });
     let result = {};
-    if (setting) {
+    if (oldInfo) {
       result = await this.prismaService.setting.update({
         where: { address },
-        data: {
-          setting: message,
-          ...info,
-        },
+        data,
       });
     } else {
       result = await this.prismaService.setting.create({
-        data: { address, setting: message, ...info },
+        data,
       });
     }
     return result;
   }
 
   async findSetting(address: string) {
-    const setting = await this.prismaService.setting.findFirst({
-      where: { address },
-    });
-    return setting;
+    try {
+      const setting = await this.prismaService.setting.findFirst({
+        where: { address },
+      });
+      return setting;
+    } catch (err) {
+      return err;
+    }
   }
 }
