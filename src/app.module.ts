@@ -15,12 +15,12 @@ import { SettingsModule } from './api/settings/settings.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
     TestModule,
     ScheduleModule.forRoot(),
     DonatesModule,
     SettingsModule,
     TimedTaskModule,
-    PrismaModule,
     HttpModule,
   ],
   controllers: [AppController],
