@@ -8,12 +8,20 @@ export class SettingsController {
 
   @Post()
   @ApiBody({ type: CreateSettingDto })
-  create(@Body() createSettingDto: CreateSettingDto) {
-    return this.settingsService.create(createSettingDto);
+  async create(@Body() createSettingDto: CreateSettingDto) {
+    try {
+      return await this.settingsService.create(createSettingDto);
+    } catch (err) {
+      return err;
+    }
   }
   @Get(':address')
   @ApiParam({ name: 'address', type: 'string' })
-  findSetting(@Param('address') address: string) {
-    return this.settingsService.findSetting(address);
+  async findSetting(@Param('address') address: string) {
+    try {
+      return await this.settingsService.findSetting(address);
+    } catch (err) {
+      return err;
+    }
   }
 }
