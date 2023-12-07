@@ -30,7 +30,7 @@ model Donation {
 
 model Setting {
   id          Int     @id @default(autoincrement())
-  address     String  @unique
+  address     String  
   setting     String
   type        Int?
   color       String?
