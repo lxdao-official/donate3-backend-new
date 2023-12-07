@@ -11,6 +11,7 @@ import { DonatesModule } from './api/donates/donates.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HttpModule } from '@nestjs/axios';
 import { SettingsModule } from './api/settings/settings.module';
+import { SettingModule } from './api/setting/setting.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SettingsModule } from './api/settings/settings.module';
     PrismaModule,
     HttpModule,
     SettingsModule,
+    SettingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
