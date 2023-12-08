@@ -40,6 +40,7 @@ export class SettingsService {
   }
 
   async findSetting(address: string) {
+    return this.prismaService;
     try {
       const setting = await this.prismaService.settings.findFirst({
         where: { address },
