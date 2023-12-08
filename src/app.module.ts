@@ -11,6 +11,7 @@ import { DonatesModule } from './api/donates/donates.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HttpModule } from '@nestjs/axios';
 import { SettingsModule } from './api/settings/settings.module';
+import { PrismaService } from './prisma/prisma.service';
 
 @Module({
   imports: [
@@ -21,10 +22,9 @@ import { SettingsModule } from './api/settings/settings.module';
     SettingsModule,
     TimedTaskModule,
     HttpModule,
-    PrismaModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, PrismaService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
