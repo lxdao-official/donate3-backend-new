@@ -20,7 +20,7 @@ CREATE TABLE "Donation" (
 );
 
 -- CreateTable
-CREATE TABLE "Setting" (
+CREATE TABLE "Settings" (
     "id" SERIAL NOT NULL,
     "address" TEXT NOT NULL,
     "setting" TEXT NOT NULL,
@@ -32,5 +32,8 @@ CREATE TABLE "Setting" (
     "twitter" TEXT,
     "telegram" TEXT,
 
-    CONSTRAINT "Setting_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Settings_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Settings_address_key" ON "Settings"("address");
