@@ -22,7 +22,7 @@ export class SettingsService {
       setting: message,
       ...info,
     };
-    const oldInfo = await this.prismaService.settings.findFirst({
+    const oldInfo = await this.prismaService.settings.findUnique({
       where: { address },
     });
     let result = {};
@@ -41,9 +41,18 @@ export class SettingsService {
 
   async findSetting(address: string) {
     try {
-      const setting = await this.prismaService.settings.findFirst({
+      const setting = await this.prismaService.settings.findUnique({
         where: { address },
       });
+      return setting;
+    } catch (err) {
+      return err;
+    }
+  }
+
+  async findAllData() {
+    try {
+      const setting = await this.prismaService.settings.findMany();
       return setting;
     } catch (err) {
       return err;

@@ -16,6 +16,14 @@ export class SettingsController {
       return err;
     }
   }
+  @Get()
+  async find() {
+    try {
+      return await this.settingsService.findAllData();
+    } catch (err) {
+      return err;
+    }
+  }
   @Get(':address')
   @ApiParam({ name: 'address', type: 'string' })
   async findSetting(@Param('address') address: string) {

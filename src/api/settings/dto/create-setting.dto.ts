@@ -5,7 +5,7 @@ export class CreateSettingDto {
     name: 'signature',
     type: 'string',
     default:
-      '0xcfaacdefb3784d0e651cd8740a9db2041bef2da9090eeff74ea8ab0372ec63a42f5c82f3a799b81dd2329714a90bef22e2de51bdeb664e374f87dcf2650956dc1b',
+      '0x310e3a3b75602e1d26e86f124237a4e932ec40317a842d4a496754145d06385a44482423ac9868e7604de8a2898793ad915ce4cacee9310e5932d19a34dab3be1b',
   })
   signature: string;
   @ApiProperty({
@@ -18,7 +18,7 @@ export class CreateSettingDto {
     name: 'message',
     type: 'string',
     default:
-      '{"type":1,"address":"0x11478E001E70e70A80654A820e4c947b68E970d8","color":"#2b3607","name":"Donate3","avatar":"https://nftstorage.link/ipfs/bafkreicni4lkqxrwjcaw7ckpqqe3n6etx6gnpzgx6qvo3xaznoroli7gnu","description":"<p>donate3official</p>","twitter":"https://twitter.com/donate3official","telegram":"https://t.me/donate3official"}',
+      '{"type":0,"address":"0x11478E001E70e70A80654A820e4c947b68E970d8","color":"#0f1302","name":"Donate3","avatar":"","description":"","twitter":"","telegram":""}',
   })
   message: string;
 }
