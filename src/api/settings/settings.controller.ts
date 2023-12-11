@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Query } from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { CreateSettingDto } from './dto/create-setting.dto';
-import { ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 @Controller('settings')
 @ApiTags('settings')
 export class SettingsController {
@@ -17,9 +17,10 @@ export class SettingsController {
     }
   }
   @Get()
-  async find() {
+  @ApiQuery({ name: 'num', type: 'number', required: false })
+  async find(@Query('num') num: number) {
     try {
-      return await this.settingsService.findAllData();
+      return await this.settingsService.findAllData(num || 20);
     } catch (err) {
       return err;
     }

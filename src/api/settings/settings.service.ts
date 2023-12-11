@@ -50,10 +50,23 @@ export class SettingsService {
     }
   }
 
-  async findAllData() {
+  async findAllData(num: number) {
     try {
       const setting = await this.prismaService.settings.findMany();
-      return setting;
+      const maxLength = setting.length;
+      const allNumbers = new Set();
+
+      if (maxLength <= num) {
+        return setting;
+      }
+
+      while (allNumbers.size < num) {
+        const randomNum = Math.floor(Math.random() * maxLength);
+        allNumbers.add(randomNum);
+      }
+      const result = setting.filter((i, index) => allNumbers.has(index));
+
+      return result;
     } catch (err) {
       return err;
     }
