@@ -6,7 +6,7 @@ import { Cron } from '@nestjs/schedule';
 import { ethers, Contract, EventLog } from 'ethers';
 import config from 'src/config';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { toLower } from 'lodash';
+import { chain, toLower } from 'lodash';
 import { Prisma } from '@prisma/client';
 import { DonatesService } from 'src/api/donates/donates.service';
 import { HttpService } from '@nestjs/axios';
@@ -201,38 +201,42 @@ export class TimedTaskService {
   }
 
   async handleChain(chainId: number) {
-    const lastData = await this.getLatestData(chainId);
-    const { provider, contract } = this.providerContracts[chainId];
-    const blockNumber = await provider.getBlockNumber();
-    const fromBlockNumber = lastData ? lastData.blockNumber + 1 : 0;
-    const toBlockNumber = blockNumber - 1;
+    try {
+      const lastData = await this.getLatestData(chainId);
+      const { provider, contract } = this.providerContracts[chainId];
+      const blockNumber = await provider.getBlockNumber();
+      const fromBlockNumber = lastData ? lastData.blockNumber + 1 : 0;
+      const toBlockNumber = blockNumber - 1;
 
-    const data = await this.getBlockDonateHistory(
-      chainId,
-      fromBlockNumber,
-      toBlockNumber,
-    );
-
-    if (data.length > 0) {
-      try {
-        if (this.priceList.length == 0) {
-          this.priceList = await this.donateService.getTokenPrice();
-        }
-        const dataWithAmount: Partial<CreateDonateDto>[] =
-          this.donateService.getDonateHistoryWithAmount(data, this.priceList);
-        await this.prismaService.donation.createMany({
-          data: dataWithAmount as unknown as Prisma.DonationCreateManyInput[],
-        });
-      } catch (e) {
-        this.logger.error(e.message);
-      }
-      this.logger.log(
-        `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
-          data.length
-        }`,
+      const data = await this.getBlockDonateHistory(
+        chainId,
+        fromBlockNumber,
+        toBlockNumber,
       );
-    } else {
-      this.logger.log(`${new Date().toString()}: No data to update`);
+
+      if (data.length > 0) {
+        try {
+          if (this.priceList.length == 0) {
+            this.priceList = await this.donateService.getTokenPrice();
+          }
+          const dataWithAmount: Partial<CreateDonateDto>[] =
+            this.donateService.getDonateHistoryWithAmount(data, this.priceList);
+          await this.prismaService.donation.createMany({
+            data: dataWithAmount as unknown as Prisma.DonationCreateManyInput[],
+          });
+        } catch (e) {
+          this.logger.error(e.message);
+        }
+        this.logger.log(
+          `${new Date().toString()}: blockNumber is from ${fromBlockNumber} to ${toBlockNumber}, Update donation historical data quantity: ${
+            data.length
+          }`,
+        );
+      } else {
+        this.logger.log(`${new Date().toString()}: No data to update`);
+      }
+    } catch (e) {
+      this.logger.error(`chainId: ${chainId} update failed`, e.message);
     }
   }
 
