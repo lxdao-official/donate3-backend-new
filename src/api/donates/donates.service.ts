@@ -329,6 +329,6 @@ export class DonatesService {
         { trait_type: 'num', vaule: num },
         { trait_type: 'amount', value: amount },
       ],
-    }; 
+    };
   }
 }
