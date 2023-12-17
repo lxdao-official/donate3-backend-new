@@ -14,7 +14,7 @@ export class TransformInterceptor implements NestInterceptor {
       map((data) => {
         if (request.path === '/donates/SBTCard') {
           // 获取get请求参数
-          return { data };
+          return data;
         }
         return { data, code: 200, message: 'success' };
       }),
