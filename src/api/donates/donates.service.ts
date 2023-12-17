@@ -319,6 +319,6 @@ export class DonatesService {
       .png()
       .toBuffer();
     const base64String = roundedCornerResizer.toString('base64');
-    return { img: base64String };
+    return { img: base64String, address, num, amount };
   }
 }
