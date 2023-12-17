@@ -300,7 +300,7 @@ export class DonatesService {
   }
 
   async getSBTCardImg(info: SBTCardImgDto) {
-    const { address } = info;
+    const { address, id } = info;
     const donateHistory = await this.findDonates({
       where: { from: address },
     });
@@ -321,6 +321,7 @@ export class DonatesService {
     const base64String = roundedCornerResizer.toString('base64');
     return {
       image: `data:image/png;base64,${base64String}`,
+      name: `Donate3 #${id}`,
       attributes: [
         {
           trait_type: 'address',
