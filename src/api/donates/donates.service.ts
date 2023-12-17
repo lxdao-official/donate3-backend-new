@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Query } from '@nestjs/common';
 import { CreateDonateDto } from './dto/create-donate.dto';
 import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
@@ -10,6 +10,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import config from 'src/config';
+import { SBTCardImgDto } from './dto/SBTCardImg.dto';
+import * as sharp from 'sharp';
+import getTemplateCard from 'src/utils/getTemplateCard';
 
 interface OkxResponse {
   instId: string;
@@ -294,5 +297,28 @@ export class DonatesService {
       0,
     );
     return totalDonationSum;
+  }
+
+  async getSBTCardImg(info: SBTCardImgDto) {
+    const { address } = info;
+    const donateHistory = await this.findDonates({
+      where: { from: address },
+    });
+
+    const num = donateHistory.length;
+    const amount = donateHistory.reduce(
+      (val, i) => val + parseFloat(i.amount),
+      0,
+    );
+
+    const svgStr = getTemplateCard(num, amount.toFixed(2), address);
+    const roundedCorners = Buffer.from(svgStr);
+    const roundedCornerResizer = await sharp(roundedCorners, {
+      unlimited: true,
+    })
+      .png()
+      .toBuffer();
+    const base64String = roundedCornerResizer.toString('base64');
+    return { img: base64String };
   }
 }

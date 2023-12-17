@@ -23,6 +23,7 @@
     "prisma": "npx prisma generate && npx prisma migrate dev --name init"
   },
   "dependencies": {
+    "@img/sharp-darwin-arm64": "^0.33.0",
     "@nestjs/axios": "^3.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
@@ -38,7 +39,8 @@
     "lodash": "^4.17.21",
     "pg": "^8.11.1",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.6.6",

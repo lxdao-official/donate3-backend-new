@@ -18,6 +18,7 @@ import { DonationRankingDto } from './dto/donation-ranking.dto';
 import { QueryDonationAmount } from './dto/query-donation-amount.dto';
 import { TotalDonationSumDto } from './dto/total-donation-sum.dto';
 import { Prisma } from '@prisma/client';
+import { SBTCardImgDto } from './dto/SBTCardImg.dto';
 
 @Controller('donates')
 export class DonatesController {
@@ -131,13 +132,19 @@ export class DonatesController {
     );
     return totalDonationSum;
   }
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateDonateDto: UpdateDonateDto) {
-  //   return this.donatesService.update(+id, updateDonateDto);
-  // }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.donatesService.remove(+id);
-  // }
+  @Get('SBTCard')
+  @ApiQuery({
+    name: 'address',
+    description: `Donator's address`,
+    required: true,
+  })
+  @ApiQuery({
+    name: 'id',
+    description: `SBTCard id`,
+    required: true,
+  })
+  async getSBTCardImg(@Query() query: SBTCardImgDto) {
+    return await this.donatesService.getSBTCardImg(query);
+  }
 }

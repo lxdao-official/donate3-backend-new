@@ -48,13 +48,26 @@ export class TimedTaskService {
     private httpService: HttpService,
   ) {
     try {
-      const { CONTRACT_MAP, abi, abiUid, RPC_MAP, useUidChainId } = config;
-      const INFURA_APIKEY = this.configService.get('INFURA_APIKEY');
+      const {
+        CONTRACT_MAP,
+        abi,
+        abiUid,
+        RPC_MAP,
+        useUidChainId,
+        TEST_CHAIN_ID,
+      } = config;
       this.providerContracts = {};
       Object.keys(RPC_MAP).forEach((chainId) => {
         const parsedChainId = parseInt(chainId, 10);
         if (CONTRACT_MAP[parsedChainId]) {
-          const url = RPC_MAP[parsedChainId] + INFURA_APIKEY;
+          const INFURA_APIKEY = this.configService.get(
+            TEST_CHAIN_ID.includes(parsedChainId)
+              ? 'INFURA_APIKEY_test'
+              : `INFURA_APIKEY_${parsedChainId}`,
+          );
+          const INFURA_APIKEY_DEFAULT = this.configService.get('INFURA_APIKEY');
+          const url =
+            RPC_MAP[parsedChainId] + INFURA_APIKEY || INFURA_APIKEY_DEFAULT;
           const provider = new ethers.JsonRpcProvider(url);
           const contract = new ethers.Contract(
             CONTRACT_MAP[parsedChainId],
