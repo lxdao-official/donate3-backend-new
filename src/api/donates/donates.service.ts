@@ -320,7 +320,7 @@ export class DonatesService {
       .toBuffer();
     const base64String = roundedCornerResizer.toString('base64');
     return {
-      img: base64String,
+      img: `data:image/svg;base64,${base64String}`,
       attributes: [
         {
           trait_type: 'address',
