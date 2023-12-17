@@ -324,11 +324,11 @@ export class DonatesService {
       name: `Donate3 #${id}`,
       attributes: [
         {
-          trait_type: 'address',
+          trait_type: 'Address',
           value: address,
         },
-        { trait_type: 'num', vaule: num },
-        { trait_type: 'amount', value: amount },
+        { trait_type: 'Num', vaule: `${num}` },
+        { trait_type: 'Amount', value: `${amount}` },
       ],
     };
   }
