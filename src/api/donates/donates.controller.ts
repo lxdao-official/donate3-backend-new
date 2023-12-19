@@ -13,7 +13,7 @@ import { DonatesService } from './donates.service';
 import { CreateDonateDto } from './dto/create-donate.dto';
 import { UpdateDonateDto } from './dto/update-donate.dto';
 import { QueryDonateDto } from './dto/query-donate.dto';
-import { ApiOperation, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiBody, ApiParam } from '@nestjs/swagger';
 import { DonationRankingDto } from './dto/donation-ranking.dto';
 import { QueryDonationAmount } from './dto/query-donation-amount.dto';
 import { TotalDonationSumDto } from './dto/total-donation-sum.dto';
@@ -133,18 +133,18 @@ export class DonatesController {
     return totalDonationSum;
   }
 
-  @Get('SBTCard')
-  @ApiQuery({
+  @Get('SBTCard/:address/:id')
+  @ApiParam({
     name: 'address',
     description: `Donator's address`,
     required: true,
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'id',
     description: `SBTCard id`,
     required: true,
   })
-  async getSBTCardImg(@Query() query: SBTCardImgDto) {
+  async getSBTCardImg(@Param() query: SBTCardImgDto) {
     return await this.donatesService.getSBTCardImg(query);
   }
 }
