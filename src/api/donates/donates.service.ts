@@ -320,7 +320,6 @@ export class DonatesService {
       .toBuffer();
     const base64String = roundedCornerResizer.toString('base64');
     return {
-      image: `data:image/png;base64,${base64String}`,
       name: `Donate3 #${id}`,
       attributes: [
         {
@@ -330,6 +329,7 @@ export class DonatesService {
         { trait_type: 'Num', vaule: `${num}` },
         { trait_type: 'Amount', value: `${amount}` },
       ],
+      image: `data:image/png;base64,${base64String}`,
     };
   }
 }
