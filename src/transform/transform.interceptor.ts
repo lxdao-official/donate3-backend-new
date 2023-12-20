@@ -12,7 +12,7 @@ export class TransformInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     return next.handle().pipe(
       map((data) => {
-        if (request.path === '/donates/SBTCard') {
+        if ((request.path as string).startsWith('/donates/SBTCard')) {
           // 获取get请求参数
           return data;
         }
