@@ -316,7 +316,10 @@ export class DonatesService {
     const roundedCornerResizer = await sharp(roundedCorners, {
       unlimited: true,
     })
-      .png()
+      .png({
+        compressionLevel: 1,
+        quality: 1,
+      })
       .toBuffer();
     const base64String = roundedCornerResizer.toString('base64');
     return {
