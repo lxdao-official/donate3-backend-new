@@ -301,15 +301,18 @@ export class DonatesService {
 
   async getSBTCardImg(info: SBTCardImgDto) {
     const { address, id } = info;
-    const donateHistory = await this.findDonates({
-      where: { from: address },
-    });
+    // const donateHistory = await this.findDonates({
+    //   where: { from: address },
+    // });
 
-    const num = donateHistory.length;
-    const amount = donateHistory.reduce(
-      (val, i) => val + parseFloat(i.amount),
-      0,
-    );
+    // const num = donateHistory.length;
+    // const amount = donateHistory.reduce(
+    //   (val, i) => val + parseFloat(i.amount),
+    //   0,
+    // );
+
+    const num = 0;
+    const amount = 100;
 
     const svgStr = getTemplateCard(num, amount.toFixed(2), address);
     const roundedCorners = Buffer.from(svgStr);
