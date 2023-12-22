@@ -317,8 +317,8 @@ export class DonatesService {
       unlimited: true,
     })
       .png({
-        compressionLevel: 1,
-        quality: 1,
+        compressionLevel: 5,
+        quality: 5,
       })
       .toBuffer();
     const base64String = roundedCornerResizer.toString('base64');
