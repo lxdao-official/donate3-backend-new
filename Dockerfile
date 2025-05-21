@@ -1,16 +1,13 @@
-FROM node:16-slim
+FROM node:16
 
-RUN apt-get update \
-    && apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update \
+#     && apt-get install -qq build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
 WORKDIR /app/
-COPY package*.json ./
-RUN npm install --production \
-    && npm cache clean --force
-
 COPY . .
-RUN npm run build
+RUN npm config set strict-ssl false \
+    && npm install \
+    && npm run build
 
 EXPOSE 80
 CMD [ "npm", "start" ]
