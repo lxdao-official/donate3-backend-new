@@ -72,14 +72,37 @@ export class TimedTaskService {
   }
 
   async getChainIdList() {
-    try {
-      const { data = [] } = await this.httpService.axiosRef.get(
-        'https://chainid.network/chains.json',
-      );
-      this.chainIdList = data;
-    } catch (e) {
-      this.logger.error('getChainIdList:', 'error', e.message);
-    }
+    const maxRetries = 3;
+    let retries = 0;
+    const fetchWithRetry = async () => {
+      try {
+        const { data = [] } = await this.httpService.axiosRef.get(
+          'https://chainid.network/chains.json',
+          { timeout: 10000 }, // Add 10s timeout
+        );
+        this.chainIdList = data;
+        this.logger.log('Successfully fetched chain ID list');
+        return true;
+      } catch (e) {
+        this.logger.error(
+          `getChainIdList attempt ${retries + 1} failed:`,
+          e.message,
+        );
+        if (e.code === 'ECONNRESET' && retries < maxRetries) {
+          retries++;
+          this.logger.log(
+            `Retrying getChainIdList (${retries}/${maxRetries})...`,
+          );
+          // Exponential backoff: 1s, 2s, 4s
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * Math.pow(2, retries - 1)),
+          );
+          return fetchWithRetry();
+        }
+        return false;
+      }
+    };
+    return fetchWithRetry();
   }
 
   async getLatestData(chainId: number) {
